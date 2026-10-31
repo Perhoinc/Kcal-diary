@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kcal Diary">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Kcal Diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Narrow:wght@500;600;700&display=swap">
+<style>
+/* Layout: one narrow column like a nutrition label — day panel, quick add, entries, history, settings */
+:root{
+  --bg:#f8f3ff; --paper:#ffffff; --ink:#2a1650; --ink-soft:#5c4a85; --line:#e2d4f7;
+  --accent:#7a2ff2; --accent-soft:#efe2ff; --over:#f05a0a; --over-soft:#ffe4d1; --ok:#12a243; --ok-soft:#d6f7e0;
+  --hi:#ffcc00; --hi-soft:#fff2b8; --on-hi:#2a1650;
+  --muted:#8a7fa0;
+  --f-display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
+  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
+  --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
+  --muted:#9488a8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
+  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
+  --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
+  --muted:#9488a8; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+.backup{display:flex;flex-direction:column;gap:10px;margin-top:12px;font-size:14px}
+.backup .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.backup p{margin:0;color:var(--ink-soft)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+main{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--f-display);margin:0;text-wrap:balance}
+h1{font-size:28px;font-weight:700;letter-spacing:.01em}
+h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)}
+.num{font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.datebar{display:flex;align-items:center;gap:6px}
+.titlerow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.tabs a{padding:5px 12px;font-size:13px;font-weight:600;color:var(--ink-soft);text-decoration:none}
+.tabs a+a{border-left:1px solid var(--line)}
+.tabs a[aria-current="page"]{background:var(--hi);color:var(--on-hi)}
+body[data-view="history"] .today-only,body[data-view="today"] .history-only{display:none!important}
+.datebar button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 11px;font-weight:600}
+.datebar .today{font-size:13px}
+.datelabel{font-family:var(--f-display);font-weight:600;font-size:17px;min-width:9.5em;text-align:center}
+.status{font-size:14px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+
+/* nutrition-label day panel */
+.label{background:var(--paper);border:2px solid var(--accent);border-radius:6px;overflow:hidden}
+.label-head{background:var(--accent);color:var(--paper);border-bottom:4px solid var(--hi);padding:8px 14px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.label-head b{font-family:var(--f-display);font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.label-head span{font-size:13px;opacity:.85}
+.label-body{padding:14px}
+.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.big .v{font-family:var(--f-display);font-size:46px;font-weight:700;line-height:1}
+.big .u{font-weight:600;color:var(--ink-soft)}
+.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-left:auto}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.over{background:var(--over-soft);color:var(--over)} .pill.under{background:var(--accent-soft);color:var(--accent)}
+.meter{position:relative;height:14px;background:var(--accent-soft);border-radius:4px;margin:14px 0 6px;overflow:hidden}
+.meter .band{position:absolute;top:0;bottom:0;background:var(--ok-soft);border-left:2px solid var(--ok);border-right:2px solid var(--ok)}
+.meter .fill{position:absolute;top:3px;bottom:3px;left:0;background:var(--accent);border-radius:3px}
+.meter .fill.over{background:var(--over)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.rows{margin-top:12px;border-top:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--ink-soft)}
+.complete{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px}
+.complete input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* quick add */
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.qbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--paper);border:1.5px solid var(--accent);color:var(--ink);border-radius:10px;padding:10px 12px}
+.qbtn:hover{background:var(--accent-soft)}
+.qbtn b{font-weight:700}
+.qbtn span{font-size:13px;color:var(--ink-soft)}
+.qbtn.done{border-style:dashed;border-color:var(--line)}
+.qbtn.done span::after{content:" · added"}
+.itemsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:transparent;padding:5px 10px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--hi);color:var(--on-hi)}
+.itempick{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.itemkcal{font-family:var(--f-display);font-weight:700;font-size:17px;white-space:nowrap;min-width:4.5em;text-align:right}
+.itempick select{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;min-width:0}
+.chip{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:14px}
+.chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+.chip span{font-size:12px;color:var(--muted)}
+.chip b{font-weight:700;color:var(--accent)}
+.star{border:0;background:transparent;color:var(--muted);font-size:15px;padding:4px 6px;border-radius:6px;line-height:1}
+.star:hover,.star.on{color:var(--accent)}
+.kv{font-size:14px;color:var(--ink-soft);min-width:3.5em;text-align:right}
+.more{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:2px 9px 6px;border-radius:6px;letter-spacing:.05em}
+.more:hover,.more[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
+.menu{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 6px}
+.menu button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;font-size:13px}
+.menu button:disabled{color:var(--muted);cursor:default}
+.menu .danger{color:var(--over);border-color:var(--over-soft)}
+.menu .icon{min-width:34px;font-size:15px;line-height:1;padding:6px 9px;display:inline-flex;align-items:center;justify-content:center}
+.menu .star,.menu .star:disabled{color:var(--ok)}
+.menu .star.on{color:var(--ok);opacity:1}
+.menu .danger.confirm{background:var(--over);color:var(--paper);border-color:var(--over)}
+.mbtn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:3px 9px;font-size:13px;font-weight:600}
+.iedit{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.iedit .ir{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
+.iedit input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;min-width:0}
+
+/* entries */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:4px 14px}
+.meal{padding:10px 0;border-bottom:1px solid var(--line)}
+.meal:last-child{border-bottom:0}
+.meal-h{display:flex;justify-content:space-between;font-family:var(--f-display);font-weight:700;font-size:15px;margin-bottom:4px}
+.meal-h .num{color:var(--ink-soft)}
+.entry{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:4px 0}
+.entry .food{min-width:0;font-size:14px}
+.entry .note{display:block;font-size:12px;color:var(--muted)}
+.kin{width:68px;text-align:right;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 6px;font-variant-numeric:tabular-nums}
+.kin:hover,.kin:focus{border-color:var(--line);background:var(--bg)}
+.del{border:0;background:transparent;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px}
+.del:hover{color:var(--over)}
+.del.confirm{background:var(--over-soft);color:var(--over);font-weight:600}
+.empty{color:var(--muted);font-size:14px;padding:12px 0}
+
+form.add{display:grid;grid-template-columns:110px 1fr 80px auto;gap:8px;margin-top:4px}
+form.add input,form.add select,.set input,.pedit input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;min-width:0}
+.primary{background:var(--accent);color:var(--paper);border:0;border-radius:8px;padding:8px 14px;font-weight:700}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px}
+@media (max-width:520px){form.add{grid-template-columns:1fr 80px}form.add .food-in{grid-column:1 / -1;order:-1}}
+
+/* history */
+.chart{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 10px 6px;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:420px;height:auto}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .k{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+.stat .v{font-family:var(--f-display);font-size:24px;font-weight:700}
+@media (max-width:440px){.stats{grid-template-columns:1fr 1fr}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);padding:4px 4px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+.qa summary h2{display:inline}
+.qa-body{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.set{display:grid;grid-template-columns:1fr 110px;gap:8px 12px;align-items:center;margin-top:12px;font-size:14px}
+.pedit{margin-top:12px;display:flex;flex-direction:column;gap:14px}
+.pblock{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.pblock .pi{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
+.pblock .ph{display:flex;gap:8px;align-items:center;font-weight:700}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:14px;z-index:20}
+@media (prefers-reduced-motion:no-preference){.meter .fill{transition:width .3s ease}}
+</style>
+</head>
+<body>
+
+<main>
+  <div class="top">
+    <div class="titlerow"><h1>Kcal Diary</h1>
+      <nav class="tabs" aria-label="Views"><a href="#today" id="tab-today">Today</a><a href="#history" id="tab-history">History</a></nav></div>
+    <div class="datebar today-only">
+      <button id="prev" aria-label="Previous day">‹</button>
+      <div class="datelabel" id="datelabel">–</div>
+      <button id="next" aria-label="Next day">›</button>
+      <button id="today" class="today">Today</button>
+    </div>
+  </div>
+
+  <div id="status" class="status" hidden></div>
+
+  <section class="label today-only" aria-label="Day summary">
+    <div class="label-head"><b>Näringsvärde per dag</b><span id="targetline">Target 2,100–2,300 kcal</span></div>
+    <div class="label-body">
+      <div class="big"><span class="v num" id="total">–</span><span class="u">kcal</span><span class="pill" id="pill" hidden></span></div>
+      <div class="meter" aria-hidden="true"><div class="band" id="band"></div><div class="fill" id="fill"></div></div>
+      <div class="scale num" id="scale"><span>0</span><span>1,000</span><span>2,000</span><span>3,000</span></div>
+      <div class="rows num" id="rows"></div>
+      <label class="complete"><input type="checkbox" id="complete"> Day fully logged</label>
+    </div>
+  </section>
+
+  <details class="qa today-only" id="qabox" open>
+    <summary><h2>Quick add</h2></summary>
+    <div class="qa-body">
+    <div class="quick" id="quick"><div class="empty">Your regular meals appear here once the log has loaded.</div></div>
+    <div class="itemsbar"><span style="font-size:13px;color:var(--ink-soft)">Single items go to</span>
+      <div class="seg" id="itemmeal" role="group" aria-label="Meal for single items"></div></div>
+    <div class="itempick"><select id="itemsel" aria-label="Regular item"><option value="">Loading items…</option></select><span class="itemkcal num" id="itemkcal" aria-live="polite">–</span><button class="primary" id="itemadd" type="button">Add</button></div>
+    </div>
+  </details>
+
+  <section class="today-only" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Logged today</h2>
+    <div class="card" id="entries"><div class="empty">Loading the log…</div></div>
+    <form class="add" id="addform" autocomplete="off">
+      <select id="add-meal" aria-label="Meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+      <input id="add-food" class="food-in" placeholder="Food, e.g. 1 boiled egg" aria-label="Food" required>
+      <input id="add-kcal" type="number" inputmode="numeric" min="0" step="1" placeholder="kcal" aria-label="kcal" required>
+      <button class="primary" type="submit">Add</button>
+    </form>
+  </section>
+
+  <section class="history-only" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Last 14 days</h2>
+    <p style="margin:0;font-size:13px;color:var(--ink-soft)">Tap a day in the chart to open it.</p>
+    <div class="stats" id="stats"></div>
+    <div class="chart"><div id="chart"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Fully logged</span><span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>Partial</span><span><i style="background:var(--ok-soft);border:1px solid var(--ok)"></i>Target range</span></div>
+    </div>
+  </section>
+
+  <details id="presetbox" class="today-only">
+    <summary>Edit regular meals</summary>
+    <div class="pedit" id="pedit"></div>
+  </details>
+
+  <details id="itembox" class="today-only">
+    <summary>Edit regular items</summary>
+    <div class="iedit" id="iedit"></div>
+  </details>
+
+  <details>
+    <summary>Targets and daily burn</summary>
+    <div class="set">
+      <label for="s-burn">Estimated daily burn (kcal)</label><input id="s-burn" type="number" step="10" class="num">
+      <label for="s-low">Target, low (kcal)</label><input id="s-low" type="number" step="10" class="num">
+      <label for="s-high">Target, high (kcal)</label><input id="s-high" type="number" step="10" class="num">
+    </div>
+  </details>
+  <details id="backupbox" class="today-only" hidden>
+    <summary>Backup</summary>
+    <div class="backup">
+      <p>Your log is saved in this browser on this device only. Export a backup now and then, and use it to move your log to another device.</p>
+      <div class="row2"><button class="primary" id="exportbtn" type="button">Export backup</button>
+        <label class="ghost" for="importfile" style="cursor:pointer">Import backup</label><input type="file" id="importfile" accept="application/json,.json" hidden></div>
+      <div id="importconfirm" class="row2" hidden><span id="importmsg"></span><button class="primary" id="importyes" type="button">Replace</button><button class="ghost" id="importno" type="button">Cancel</button></div>
+    </div>
+  </details>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const MEALS=["Breakfast","Lunch","Dinner","Snack"];
+const S={entries:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),settings:{burn:2700,targetLow:2100,targetHigh:2300},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
+const $=id=>document.getElementById(id);
+function defaultMeal(){const h=new Date().getHours()+new Date().getMinutes()/60;return h<10.5?"Breakfast":h<15?"Lunch":h<20.5?"Dinner":"Snack"}
+const norm=s=>String(s||"").trim().toLowerCase();
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function parse(s){const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function shift(s,n){const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)}
+const nf=new Intl.NumberFormat("en-US");
+const n=v=>nf.format(Math.round(v||0));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function dayLabel(s){const d=parse(s),t=ymd(new Date());const w=d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});return s===t?"Today · "+w:s===shift(t,-1)?"Yesterday · "+w:w}
+function totalFor(date){return S.entries.filter(e=>e.date===date).reduce((a,e)=>a+(Number(e.kcal)||0),0)}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
+function showStatus(msg){const s=$("status");s.textContent=msg;s.hidden=!msg}
+
+function render(){
+  const {burn,targetLow,targetHigh}=S.settings;
+  $("datelabel").textContent=dayLabel(S.date);
+  $("next").disabled=false;
+  $("targetline").textContent=`Target ${n(targetLow)}–${n(targetHigh)} kcal`;
+  const list=S.entries.filter(e=>e.date===S.date);
+  const tot=list.reduce((a,e)=>a+(Number(e.kcal)||0),0);
+  const complete=!!(S.days[S.date]&&S.days[S.date].complete);
+  $("total").textContent=S.loaded?n(tot):"–";
+  const max=Math.max(3000,tot*1.05);
+  $("band").style.left=(targetLow/max*100)+"%";$("band").style.width=((targetHigh-targetLow)/max*100)+"%";
+  const fill=$("fill");fill.style.width=Math.min(100,tot/max*100)+"%";fill.classList.toggle("over",tot>targetHigh);
+  const pill=$("pill");
+  if(S.loaded&&list.length){pill.hidden=false;
+    if(tot>targetHigh){pill.className="pill over";pill.textContent=`${n(tot-targetHigh)} over`}
+    else if(tot>=targetLow){pill.className="pill ok";pill.textContent="In range"}
+    else{pill.className="pill under";pill.textContent=`${n(targetHigh-tot)} left`}
+  } else pill.hidden=true;
+  $("rows").innerHTML=MEALS.map(m=>{const v=list.filter(e=>e.meal===m).reduce((a,e)=>a+(Number(e.kcal)||0),0);return `<div class="row"><span class="k">${m}</span><span>${n(v)} kcal</span></div>`}).join("")+
+    `<div class="row"><span class="k">${complete?"Estimated deficit":"Estimated deficit so far"}</span><span>${n(burn-tot)} kcal</span></div>`;
+  $("complete").checked=complete;$("complete").disabled=!S.canWrite||!S.loaded;
+
+  // quick add
+  const q=$("quick");
+  if(S.loaded){
+    if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`;
+    else q.innerHTML=S.presets.map(p=>{const k=(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);const done=list.some(e=>e.preset===p.id);
+      if(!(p.items||[]).some(i=>i.food))return "";
+      return `<button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${esc(p.meal)} · ${n(k)} kcal</span></button>`}).join("");
+  }
+
+  // single items
+  $("itemmeal").innerHTML=MEALS.map(m=>`<button type="button" data-im="${m}" aria-pressed="${m===S.itemMeal}">${m}</button>`).join("");
+  if(S.loaded){
+    const sel=$("itemsel"),keep=sel.value;
+    sel.innerHTML=S.items.length?`<option value="">Choose a regular item…</option>`+S.items.map(it=>`<option value="${esc(it.id)}">${esc(it.name)} · ${n(it.kcal)} kcal</option>`).join("")
+      :`<option value="">No regular items yet. Tap ☆ on a logged item to save one</option>`;
+    if(S.items.some(i=>i.id===keep))sel.value=keep;
+    showItemKcal();
+    sel.disabled=!S.canWrite||!S.items.length;$("itemadd").disabled=!S.canWrite||!S.items.length;
+  }
+
+  // entries
+  const box=$("entries");
+  if(!S.loaded){}
+  else if(!list.length) box.innerHTML=`<div class="empty">Nothing logged for this day. Tap a regular meal above or add an item below.</div>`;
+  else box.innerHTML=MEALS.filter(m=>list.some(e=>e.meal===m)).map(m=>{
+    const items=list.filter(e=>e.meal===m).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+    const sub=items.reduce((a,e)=>a+(Number(e.kcal)||0),0);
+    return `<div class="meal"><div class="meal-h"><span>${m}</span><span class="num">${n(sub)} kcal</span></div>`+
+      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(e.food)),open=S.openMenu===e.id,editing=S.editId===e.id;
+        return `<div class="entry"><span class="food">${esc(e.food)}${e.note?`<span class="note">${esc(e.note)}</span>`:""}</span>
+        ${editing?`<input class="kin" type="number" min="0" step="1" value="${Number(e.kcal)||0}" data-id="${id}" aria-label="kcal for ${esc(e.food)}"><button class="mbtn" data-done="${id}" type="button">Done</button>`
+          :`<span class="kv num">${n(e.kcal)}</span>${S.canWrite?`<button class="more" data-more="${id}" type="button" aria-haspopup="menu" aria-expanded="${open}" aria-label="Options for ${esc(e.food)}">⋯</button>`:"<span></span>"}`}
+        ${open?`<div class="menu" role="menu"><button role="menuitem" type="button" class="icon" data-edit="${id}" title="Edit kcal" aria-label="Edit kcal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14.5 5.5l3 3"/></svg></button><button role="menuitem" type="button" class="icon star${saved?" on":""}" data-star="${id}" ${saved?"disabled":""} title="${saved?"Saved as regular item":"Save as regular item"}" aria-label="${saved?"Saved as regular item":"Save as regular item"}">${saved?"★":"☆"}</button><button role="menuitem" type="button" class="icon danger${S.confirmDel===e.id?" confirm":""}" data-del="${id}" title="${S.confirmDel===e.id?"Tap again to remove":"Remove"}" aria-label="${S.confirmDel===e.id?"Tap again to remove":"Remove"}">✕</button></div>`:""}
+        </div>`}).join("")+`</div>`}).join("");
+
+  renderHistory();
+}
+
+function renderHistory(){
+  const {burn,targetLow,targetHigh}=S.settings;
+  const today=ymd(new Date());
+  const days=[];for(let i=13;i>=0;i--)days.push(shift(today,-i));
+  const data=days.map(d=>({d,t:totalFor(d),c:!!(S.days[d]&&S.days[d].complete)}));
+  const W=560,H=200,pl=40,pr=8,pt=10,pb=28,max=Math.max(3000,...data.map(x=>x.t));
+  const y=v=>pt+(H-pt-pb)*(1-v/max),bw=(W-pl-pr)/data.length;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily kcal, last 14 days">`;
+  svg+=`<rect x="${pl}" y="${y(targetHigh)}" width="${W-pl-pr}" height="${y(targetLow)-y(targetHigh)}" fill="var(--ok-soft)"/>`;
+  [0,1000,2000,3000].filter(v=>v<=max).forEach(v=>{svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v?v/1000+"k":0}</text>`});
+  svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(burn)}" y2="${y(burn)}" stroke="var(--ink-soft)" stroke-dasharray="4 3" stroke-width="1"/><text x="${W-pr}" y="${y(burn)-4}" text-anchor="end" font-size="10" fill="var(--ink-soft)">burn ${n(burn)}</text>`;
+  data.forEach((x,i)=>{const bx=pl+i*bw+bw*.18,w=bw*.64,sel=x.d===S.date;
+    if(x.t>0){const over=x.t>targetHigh&&x.c;
+      svg+=`<rect x="${bx}" y="${y(x.t)}" width="${w}" height="${y(0)-y(x.t)}" rx="2" fill="${x.c?(over?"var(--over)":"var(--accent)"):"var(--accent-soft)"}" stroke="${x.c?"none":"var(--accent)"}" stroke-width="1"/>`}
+    const d=parse(x.d);
+    svg+=`<text x="${bx+w/2}" y="${H-10}" text-anchor="middle" font-size="10" font-weight="${sel?700:400}" fill="${sel?"var(--ink)":"var(--muted)"}">${d.getDate()}</text>`;
+    svg+=`<rect x="${pl+i*bw}" y="0" width="${bw}" height="${H}" fill="transparent" data-day="${x.d}" style="cursor:pointer"><title>${dayLabel(x.d)}: ${n(x.t)} kcal${x.c?"":" (partial)"}</title></rect>`;
+  });
+  svg+=`</svg>`;$("chart").innerHTML=svg;
+
+  const comp=Object.keys(S.days).filter(d=>S.days[d].complete&&totalFor(d)>0);
+  const avg=comp.length?comp.reduce((a,d)=>a+totalFor(d),0)/comp.length:0;
+  const def=comp.length?burn-avg:0;
+  $("stats").innerHTML=`<div class="stat"><div class="k">Avg intake</div><div class="v num">${comp.length?n(avg):"–"}</div></div>
+   <div class="stat"><div class="k">Avg deficit</div><div class="v num">${comp.length?n(def):"–"}</div></div>
+   <div class="stat"><div class="k">Pace, kg/week</div><div class="v num">${comp.length?(def*7/7700).toFixed(2):"–"}</div></div>
+   <div style="grid-column:1/-1;font-size:12px;color:var(--muted)">Based on ${comp.length} fully logged day${comp.length===1?"":"s"}. About 7,700 kcal is roughly 1 kg of body fat.</div>`;
+}
+
+function renderPresets(){
+  const box=$("pedit");
+  box.innerHTML=S.presets.map(p=>`<div class="pblock" data-pid="${esc(p.id)}">
+    <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"><select data-f="meal" aria-label="Meal">${MEALS.map(m=>`<option${m===p.meal?" selected":""}>${m}</option>`).join("")}</select></div>
+    ${(p.items||[]).map((it,i)=>`<div class="pi"><input value="${esc(it.food)}" data-i="${i}" data-f="food" aria-label="Item"><input type="number" class="num" value="${Number(it.kcal)||0}" data-i="${i}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm="${i}" type="button">✕</button></div>`).join("")}
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Add item</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
+  </div>`).join("")+`<button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
+}
+function showItemKcal(){const it=S.items.find(x=>x.id===$("itemsel").value);$("itemkcal").textContent=it?n(it.kcal)+" kcal":"–"}
+function renderItems(){
+  $("iedit").innerHTML=S.items.map(it=>`<div class="ir" data-iid="${esc(it.id)}"><input value="${esc(it.name)}" data-f="name" aria-label="Item name"><input type="number" class="num" value="${Number(it.kcal)||0}" data-f="kcal" aria-label="kcal"><button class="ghost" data-idel type="button">✕</button></div>`).join("")+
+    `<div class="ir" id="newitem"><input data-f="name" placeholder="New item, e.g. 1 boiled egg" aria-label="New item name"><input type="number" class="num" data-f="kcal" placeholder="kcal" aria-label="New item kcal"><button class="primary" data-iadd type="button">Add</button></div>
+     <div style="font-size:12px;color:var(--muted)">Changes to name or kcal save when you leave the field.</div>`;
+}
+function readPreset(block){
+  const p=S.presets.find(x=>x.id===block.dataset.pid);const items=[];
+  block.querySelectorAll(".pi").forEach(r=>{const f=r.querySelector('[data-f="food"]').value.trim();const k=Number(r.querySelector('[data-f="kcal"]').value)||0;if(f)items.push({food:f,kcal:k})});
+  return {...p,name:block.querySelector('[data-f="name"]').value.trim()||p.name,meal:block.querySelector('[data-f="meal"]').value,items};
+}
+
+async function write(fn,okMsg){
+  if(!S.db)return;
+  try{await fn();if(okMsg)toast(okMsg)}catch(e){
+    if(e&&e.code==="invalid_argument"){S.canWrite=false;render();showStatus("This view can read the log but can't change it.")}
+    else if(e&&e.code==="unavailable"){await new Promise(r=>setTimeout(r,600+Math.random()*600));try{await fn();if(okMsg)toast(okMsg)}catch(_){toast("Couldn't save. Try again in a moment.")}}
+    else toast("Couldn't save. Try again in a moment.");
+  }
+}
+const now=()=>new Date().toISOString();
+
+$("prev").onclick=()=>{S.date=shift(S.date,-1);S.confirmDel=null;render()};
+$("next").onclick=()=>{S.date=shift(S.date,1);S.confirmDel=null;render()};
+$("today").onclick=()=>{S.date=ymd(new Date());render()};
+$("chart").addEventListener("click",e=>{const d=e.target.closest("[data-day]");if(d){S.date=d.dataset.day;render();location.hash="today";window.scrollTo(0,0)}});
+function route(){const v=location.hash==="#history"?"history":"today";document.body.dataset.view=v;
+  $("tab-today").toggleAttribute("aria-current",v==="today");$("tab-history").toggleAttribute("aria-current",v==="history");
+  if(v==="today")$("tab-today").setAttribute("aria-current","page");else $("tab-history").setAttribute("aria-current","page")}
+window.addEventListener("hashchange",route);route();
+$("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
+$("quick").addEventListener("click",e=>{const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
+  write(async()=>{const c=S.db.collection("entries");for(const it of p.items||[]){await c.add({date:S.date,meal:p.meal,food:it.food,kcal:Number(it.kcal)||0,preset:p.id,createdAt:now()})}},`Added ${p.name}`)});
+$("addform").onsubmit=e=>{e.preventDefault();const food=$("add-food").value.trim(),kcal=Number($("add-kcal").value);if(!food||!(kcal>=0))return;
+  const meal=$("add-meal").value;write(()=>S.db.collection("entries").add({date:S.date,meal,food,kcal,createdAt:now()}),"Added");$("add-food").value="";$("add-kcal").value=""};
+$("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
+$("itemmeal").addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}});
+$("itemsel").addEventListener("change",showItemKcal);
+$("itemadd").addEventListener("click",()=>{const it=S.items.find(x=>x.id===$("itemsel").value);if(!it){toast("Choose an item first");return}
+  write(()=>S.db.collection("entries").add({date:S.date,meal:S.itemMeal,food:it.name,kcal:Number(it.kcal)||0,item:it.id,createdAt:now()}),`Added ${it.name} to ${S.itemMeal.toLowerCase()}`)});
+$("iedit").addEventListener("change",e=>{const r=e.target.closest("[data-iid]");if(!r)return;
+  const name=r.querySelector('[data-f="name"]').value.trim(),kcal=Number(r.querySelector('[data-f="kcal"]').value)||0;if(!name)return;
+  write(()=>S.db.doc("items/"+r.dataset.iid).set({name,kcal}),"Saved")});
+$("iedit").addEventListener("click",e=>{
+  if(e.target.matches("[data-iadd]")){const r=$("newitem");const name=r.querySelector('[data-f="name"]').value.trim(),kcal=Number(r.querySelector('[data-f="kcal"]').value);
+    if(!name||!(kcal>=0)){toast("Add a name and a kcal number");return}S.forceItems=true;write(()=>S.db.collection("items").add({name,kcal}),"Item saved");return}
+  if(e.target.matches("[data-idel]")){const b=e.target,r=b.closest("[data-iid]");if(b.dataset.sure){S.forceItems=true;write(()=>S.db.doc("items/"+r.dataset.iid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}
+});
+$("entries").addEventListener("keydown",e=>{if(e.target.matches(".kin")&&e.key==="Enter"){e.preventDefault();e.target.blur();S.editId=null;render()}});
+$("entries").addEventListener("click",e=>{
+  const m=e.target.closest("[data-more]");if(m){const id=m.dataset.more;S.openMenu=S.openMenu===id?null:id;S.confirmDel=null;S.editId=null;render();return}
+  const ed=e.target.closest("[data-edit]");if(ed){S.editId=ed.dataset.edit;S.openMenu=null;render();const inp=$("entries").querySelector(".kin");if(inp){inp.focus();inp.select()}return}
+  const dn=e.target.closest("[data-done]");if(dn){S.editId=null;render();return}
+  const s=e.target.closest("[data-star]");if(s){const en=S.entries.find(x=>x.id===s.dataset.star);if(!en)return;
+    const ex=S.items.find(i=>norm(i.name)===norm(en.food));S.openMenu=null;if(ex){toast("Already a regular item");render();return}
+    S.forceItems=true;write(()=>S.db.collection("items").add({name:en.food,kcal:Number(en.kcal)||0}),"Saved as regular item");render();return}
+  const b=e.target.closest("[data-del]");if(!b)return;const id=b.dataset.del;
+  if(S.confirmDel===id){S.confirmDel=null;S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else{S.confirmDel=id;render();setTimeout(()=>{if(S.confirmDel===id){S.confirmDel=null;render()}},3000)}});
+document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(".menu,.more"))return;S.openMenu=null;S.confirmDel=null;render()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(S.openMenu||S.editId)){S.openMenu=null;S.editId=null;S.confirmDel=null;render()}});
+$("pedit").addEventListener("click",e=>{
+  if(e.target.id==="newpreset"){if(S.creating)return;S.creating=true;e.target.disabled=true;const id="p"+Date.now().toString(36);S.forcePresets=true;
+    write(()=>S.db.doc("presets/"+id).set({name:"New meal",meal:"Snack",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added below. Fill it in and tap Save").finally(()=>{S.creating=false});return}
+  const block=e.target.closest(".pblock");if(!block)return;const id=block.dataset.pid;
+  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,meal:p.meal,items:p.items,order:p.order||0}),"Saved")}
+  else if(e.target.matches("[data-additem]")){const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal"><button class="ghost" data-rm type="button">✕</button>`;e.target.parentElement.before(row)}
+  else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove()}
+  else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
+});
+["s-burn","s-low","s-high"].forEach(id=>$(id).addEventListener("change",()=>{const v={burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
+function fillSettings(){$("s-burn").value=S.settings.burn;$("s-low").value=S.settings.targetLow;$("s-high").value=S.settings.targetHigh}
+fillSettings();render();
+try{if(localStorage.getItem("kd-qa-open")==="0")$("qabox").open=false}catch(_){}
+$("qabox").addEventListener("toggle",()=>{try{localStorage.setItem("kd-qa-open",$("qabox").open?"1":"0")}catch(_){}});
+
+function makeLocalDb(){
+  const KEY="kcal-diary-v1";let data={};
+  const load=()=>{try{data=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(_){data={}}};load();
+  const subs=[];
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch(_){toast("Couldn't save on this device. Storage may be full or blocked.")}};
+  const snap=(id,b)=>({id,exists:b!==undefined,data:()=>b,metadata:{fromCache:false,hasPendingWrites:false}});
+  const deliver=s=>{const c=data[s.col]||{};if(s.id!=null)s.fn(snap(s.id,c[s.id]));else{const docs=Object.keys(c).sort().map(id=>snap(id,c[id]));s.fn({docs,size:docs.length,empty:!docs.length,docChanges:()=>[],metadata:{fromCache:false,hasPendingWrites:false}})}};
+  const emit=()=>subs.slice().forEach(deliver);
+  const sub=(col,id,fn)=>{const s={col,id,fn};subs.push(s);setTimeout(()=>deliver(s),0);return()=>{const i=subs.indexOf(s);if(i>=0)subs.splice(i,1)}};
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const ref=(col,id)=>({id,path:col+"/"+id,
+    get:async()=>snap(id,(data[col]||{})[id]),
+    set:async b=>{(data[col]=data[col]||{})[id]=JSON.parse(JSON.stringify(b));save();emit()},
+    update:async b=>{const c=data[col]||{};if(!c[id])throw{code:"invalid_argument",message:"Missing document"};c[id]={...c[id],...JSON.parse(JSON.stringify(b))};save();emit()},
+    delete:async()=>{if(data[col])delete data[col][id];save();emit()},
+    onSnapshot:fn=>sub(col,id,fn)});
+  window.addEventListener("storage",e=>{if(e.key===KEY){load();emit()}});
+  return{
+    doc:p=>{const[c,i]=p.split("/");return ref(c,i)},
+    collection:c=>({path:c,doc:id=>ref(c,id||rid()),add:async b=>{const r=ref(c,rid());await r.set(b);return r},onSnapshot:fn=>sub(c,null,fn)}),
+    exportAll:()=>JSON.parse(JSON.stringify(data)),
+    importAll:o=>{data=JSON.parse(JSON.stringify(o));save();emit()}
+  };
+}
+function startLog(db){
+  const onErr=e=>{if(e&&e.code==="revoked")showStatus("Access to this log has changed. Reload the page.");else showStatus("The log stopped updating. Reload the page.")};
+  db.collection("entries").onSnapshot(s=>{S.entries=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded=true;render()},onErr);
+  db.collection("days").onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.days=o;render()},onErr);
+  db.collection("presets").onSnapshot(s=>{S.presets=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+    const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
+    if(!typing||S.forcePresets){S.forcePresets=false;renderPresets()}render()},onErr);
+  db.collection("items").onSnapshot(s=>{S.items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.name).localeCompare(norm(b.name),"sv"));
+    const a=document.activeElement;const typing=a&&$("iedit").contains(a)&&a.tagName==="INPUT";
+    if(!typing||S.forceItems){S.forceItems=false;renderItems()}render()},onErr);
+  db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render()},onErr);
+}
+
+// backup
+let pendingImport=null;
+$("exportbtn").addEventListener("click",()=>{if(!S.db||!S.db.exportAll)return;
+  const out={app:"kcal-diary",version:1,exportedAt:new Date().toISOString(),data:S.db.exportAll()};
+  const blob=new Blob([JSON.stringify(out,null,1)],{type:"application/json"});const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="kcal-diary-backup-"+ymd(new Date())+".json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);toast("Backup exported")});
+$("importfile").addEventListener("change",async e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  try{const o=JSON.parse(await f.text());const d=o&&o.data;if(!d||typeof d!=="object"||!d.entries)throw 0;
+    pendingImport=d;const nE=Object.keys(d.entries||{}).length,nI=Object.keys(d.items||{}).length,nP=Object.keys(d.presets||{}).length;
+    $("importmsg").textContent=`Replace the log on this device with this backup (${nE} entries, ${nP} regular meals, ${nI} regular items)?`;$("importconfirm").hidden=false}
+  catch(_){toast("That file isn't a Kcal Diary backup")}});
+$("importyes").addEventListener("click",()=>{if(!pendingImport)return;S.db.importAll(pendingImport);pendingImport=null;$("importconfirm").hidden=true;toast("Backup imported")});
+$("importno").addEventListener("click",()=>{pendingImport=null;$("importconfirm").hidden=true});
+
+(async()=>{
+  const inClaude=!!(window.claude&&window.claude.use);
+  if(!inClaude){S.db=makeLocalDb();S.local=true;$("backupbox").hidden=false;startLog(S.db);return}
+  const db=await window.claude.use("db");
+  if(!db){showStatus("The log couldn't load in this view. Open it on claude.ai while signed in.");return}
+  S.db=db;
+  try{const user=await window.claude.use("user");if(user&&user.can){const c=await user.can("data.write");if(c===false)S.canWrite=false}}catch(_){}
+  startLog(db);
+})();
+</script>
+
+</body>
+</html>
