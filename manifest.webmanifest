@@ -1,0 +1,16 @@
+{
+  "name": "Kcal Diary",
+  "short_name": "KcalDiary",
+  "description": "Calorie log with one-tap regular meals and a 14-day history.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f3ff",
+  "theme_color": "#7a2ff2",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

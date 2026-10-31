@@ -5,11 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Kcal Diary">
+<meta name="apple-mobile-web-app-title" content="KcalDiary">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#7a2ff2">
 <title>Kcal Diary</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Narrow:wght@500;600;700&display=swap">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+@font-face{font-family:"Archivo";font-weight:100 900;font-style:normal;font-display:swap;src:url(fonts/archivo-wght.woff2) format("woff2")}
+@font-face{font-family:"Archivo Narrow";font-weight:500;font-style:normal;font-display:swap;src:url(fonts/archivo-narrow-500.woff2) format("woff2")}
+@font-face{font-family:"Archivo Narrow";font-weight:600;font-style:normal;font-display:swap;src:url(fonts/archivo-narrow-600.woff2) format("woff2")}
+@font-face{font-family:"Archivo Narrow";font-weight:700;font-style:normal;font-display:swap;src:url(fonts/archivo-narrow-700.woff2) format("woff2")}
+</style>
 <style>
 /* Layout: one narrow column like a nutrition label — day panel, quick add, entries, history, settings */
 :root{
@@ -163,6 +171,8 @@ summary{cursor:pointer;font-weight:600}
 .pblock{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
 .pblock .pi{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
 .pblock .ph{display:flex;gap:8px;align-items:center;font-weight:700}
+.updatebar{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:30;max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--hi);color:var(--on-hi);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.updatebar button{border:0;background:var(--on-hi);color:var(--hi);border-radius:8px;padding:6px 12px;font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:14px;z-index:20}
 @media (prefers-reduced-motion:no-preference){.meter .fill{transition:width .3s ease}}
 </style>
@@ -252,6 +262,7 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </details>
 </main>
+<div class="updatebar" id="updatebar" role="status" hidden><span>A new version is ready.</span><button id="updatebtn" type="button">Reload</button></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -494,6 +505,21 @@ $("importfile").addEventListener("change",async e=>{const f=e.target.files&&e.ta
   catch(_){toast("That file isn't a Kcal Diary backup")}});
 $("importyes").addEventListener("click",()=>{if(!pendingImport)return;S.db.importAll(pendingImport);pendingImport=null;$("importconfirm").hidden=true;toast("Backup imported")});
 $("importno").addEventListener("click",()=>{pendingImport=null;$("importconfirm").hidden=true});
+
+// Offline support and updates (only on the hosted copy)
+if(!(window.claude&&window.claude.use)&&"serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      const offer=w=>{$("updatebar").hidden=false;$("updatebtn").onclick=()=>w.postMessage("skipWaiting")};
+      if(reg.waiting&&navigator.serviceWorker.controller)offer(reg.waiting);
+      reg.addEventListener("updatefound",()=>{const w=reg.installing;if(!w)return;
+        w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller)offer(w)})});
+    }).catch(()=>{});
+    let reloading=false;
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{if(reloading)return;reloading=true;location.reload()});
+  });
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(_){}
+}
 
 (async()=>{
   const inClaude=!!(window.claude&&window.claude.use);
