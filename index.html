@@ -84,7 +84,10 @@ body[data-view="history"] .today-only,body[data-view="today"] .history-only{disp
 .meter .fill{position:absolute;top:3px;bottom:3px;left:0;background:var(--accent);border-radius:3px}
 .meter .fill.over{background:var(--over)}
 .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
-.rows{margin-top:12px;border-top:1px solid var(--line)}
+.rows{margin-top:0}
+.daylog{margin-top:12px;border-top:1px solid var(--line)}
+.daylog .meal:last-child{border-bottom:1px solid var(--line)}
+.daylog .empty{padding:10px 0}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .row:last-child{border-bottom:0}
 .row .k{color:var(--ink-soft)}
@@ -207,6 +210,7 @@ summary{cursor:pointer;font-weight:600}
       <div class="big"><span class="v num" id="total">–</span><span class="u">kcal</span><span class="pill" id="pill" hidden></span></div>
       <div class="meter" aria-hidden="true"><div class="band" id="band"></div><div class="fill" id="fill"></div></div>
       <div class="scale num" id="scale"><span>0</span><span>1,000</span><span>2,000</span><span>3,000</span></div>
+      <div class="daylog" id="entries"><div class="empty">Loading the log…</div></div>
       <div class="rows num" id="rows"></div>
       <label class="complete"><input type="checkbox" id="complete"> Day fully logged</label>
     </div>
@@ -230,10 +234,6 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </details>
 
-  <section class="today-only" style="display:flex;flex-direction:column;gap:10px">
-    <h2>Logged today</h2>
-    <div class="card" id="entries"><div class="empty">Loading the log…</div></div>
-  </section>
 
   <section class="history-only" style="display:flex;flex-direction:column;gap:10px">
     <h2>Last 14 days</h2>
@@ -310,8 +310,7 @@ function render(){
     else if(tot>=targetLow){pill.className="pill ok";pill.textContent="In range"}
     else{pill.className="pill under";pill.textContent=`${n(targetHigh-tot)} left`}
   } else pill.hidden=true;
-  $("rows").innerHTML=MEALS.map(m=>{const v=list.filter(e=>e.meal===m).reduce((a,e)=>a+(Number(e.kcal)||0),0);return `<div class="row"><span class="k">${m}</span><span>${n(v)} kcal</span></div>`}).join("")+
-    `<div class="row"><span class="k">${complete?"Estimated deficit":"Estimated deficit so far"}</span><span>${n(burn-tot)} kcal</span></div>`;
+  $("rows").innerHTML=`<div class="row"><span class="k">${complete?"Estimated deficit":"Estimated deficit so far"}</span><span>${n(burn-tot)} kcal</span></div>`;
   $("complete").checked=complete;$("complete").disabled=!S.canWrite||!S.loaded;
 
   // quick add
