@@ -1,5 +1,5 @@
 // Bump VERSION whenever any file below changes, so installed copies fetch the new files.
-const VERSION = "v6";
+const VERSION = "v7";
 const CACHE = "kcal-diary-" + VERSION;
 const FILES = [
   "./",
