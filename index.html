@@ -214,11 +214,17 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </section>
 
-  <details class="qa today-only" id="qabox" open>
-    <summary><h2>Quick add</h2></summary>
+  <details class="qa today-only" id="qa-meals" open>
+    <summary><h2>Regular meals</h2></summary>
     <div class="qa-body">
     <div class="quick" id="quick"><div class="empty">Your regular meals appear here once the log has loaded.</div></div>
-    <div class="itemsbar"><span style="font-size:13px;color:var(--ink-soft)">Single items go to</span>
+    </div>
+  </details>
+
+  <details class="qa today-only" id="qa-items" open>
+    <summary><h2>Regular items</h2></summary>
+    <div class="qa-body">
+    <div class="itemsbar"><span style="font-size:13px;color:var(--ink-soft)">Add to</span>
       <div class="seg" id="itemmeal" role="group" aria-label="Meal for single items"></div></div>
     <div class="picklist" id="picklist"><div class="empty" style="padding:10px">Loading items…</div></div>
     <div class="pickfoot"><span class="picksum num" id="picksum" aria-live="polite"><small>Tap items to select them</small></span>
@@ -479,8 +485,9 @@ $("pedit").addEventListener("click",e=>{
 ["s-burn","s-low","s-high"].forEach(id=>$(id).addEventListener("change",()=>{const v={burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
 function fillSettings(){$("s-burn").value=S.settings.burn;$("s-low").value=S.settings.targetLow;$("s-high").value=S.settings.targetHigh}
 fillSettings();render();
-try{if(localStorage.getItem("kd-qa-open")==="0")$("qabox").open=false}catch(_){}
-$("qabox").addEventListener("toggle",()=>{try{localStorage.setItem("kd-qa-open",$("qabox").open?"1":"0")}catch(_){}});
+for(const id of ["qa-meals","qa-items"]){const el=$(id),key="kd-open-"+id;
+  try{const v=localStorage.getItem(key)??(id==="qa-meals"?localStorage.getItem("kd-qa-open"):null);if(v==="0")el.open=false}catch(_){}
+  el.addEventListener("toggle",()=>{try{localStorage.setItem(key,el.open?"1":"0")}catch(_){}})}
 
 function makeLocalDb(){
   const KEY="kcal-diary-v1";let data={};
