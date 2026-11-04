@@ -128,6 +128,13 @@ body[data-view="history"] .today-only,body[data-view="today"] .history-only{disp
 .newrow .nl input:first-child{flex:1}
 .newrow .nl input.k{width:84px}
 .newrow .na{display:flex;gap:8px;flex-wrap:wrap}
+.padd{display:flex;flex-direction:column;gap:6px}
+.psug{background:var(--paper);border:1px solid var(--line);border-radius:10px;max-height:220px;overflow-y:auto;overscroll-behavior:contain}
+.psug button{display:flex;width:100%;justify-content:space-between;gap:10px;align-items:baseline;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px;text-align:left;font-size:14px;color:var(--ink)}
+.psug button:last-child{border-bottom:0}
+.psug button:hover{background:var(--accent-soft)}
+.psug button small{font-size:13px;color:var(--ink-soft);white-space:nowrap}
+.psug button.mk{color:var(--accent);font-weight:600}
 .pickfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .picksum{font-family:var(--f-display);font-weight:700;font-size:16px}
 .picksum small{font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--ink-soft)}
@@ -396,7 +403,8 @@ function renderPresets(){
   box.innerHTML=S.presets.map(p=>`<div class="pblock" data-pid="${esc(p.id)}">
     <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"><select data-f="meal" aria-label="Meal">${MEALS.map(m=>`<option${m===p.meal?" selected":""}>${m}</option>`).join("")}</select></div>
     ${(p.items||[]).map((it,i)=>`<div class="pi"><input value="${esc(it.food)}" data-i="${i}" data-f="food" aria-label="Item"><input type="number" class="num" value="${Number(it.kcal)||0}" data-i="${i}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm="${i}" type="button">✕</button></div>`).join("")}
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Add item</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
+    <div class="padd"><input class="srch" type="search" data-psrch placeholder="Search items to add to this meal" aria-label="Search regular items to add to this meal" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="psug" data-psug hidden></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Blank row</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
   </div>`).join("")+`<button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
 }
 const sfold=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
@@ -501,12 +509,27 @@ $("entries").addEventListener("click",e=>{
   if(S.confirmDel===id){S.confirmDel=null;S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else{S.confirmDel=id;render();setTimeout(()=>{if(S.confirmDel===id){S.confirmDel=null;render()}},3000)}});
 document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(".menu,.more"))return;S.openMenu=null;S.confirmDel=null;render()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(S.openMenu||S.editId)){S.openMenu=null;S.editId=null;S.confirmDel=null;render()}});
+function presetRow(food,kcal){const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal" min="0" step="1" inputmode="numeric"><button class="ghost" data-rm type="button">✕</button>`;
+  row.querySelector('[data-f="food"]').value=food||"";row.querySelector('[data-f="kcal"]').value=kcal==null?"":kcal;return row}
+$("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]");if(!inp)return;
+  const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
+  if(!toks.length){box.hidden=true;box.innerHTML="";return}
+  const m=S.items.filter(it=>hit(it.name,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
+  box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${n(it.kcal)} kcal</small></button>`).join("")+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
+  box.hidden=false});
+$("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-sugi],[data-sugnew]");if(!b)return;
+  const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),anchor=pad;let row;
+  if(b.matches("[data-sugi]")){const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;row=presetRow(it.name,Number(it.kcal)||0)}
+  else row=presetRow(inp.value.trim(),null);
+  anchor.before(row);inp.value="";const box=pad.querySelector("[data-psug]");box.hidden=true;box.innerHTML="";
+  if(b.matches("[data-sugnew]"))row.querySelector('[data-f="kcal"]').focus();
+  toast("Added to the meal. Tap Save to keep it")});
 $("pedit").addEventListener("click",e=>{
   if(e.target.id==="newpreset"){if(S.creating)return;S.creating=true;e.target.disabled=true;const id="p"+Date.now().toString(36);S.forcePresets=true;
     write(()=>S.db.doc("presets/"+id).set({name:"New meal",meal:"Snack",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added below. Fill it in and tap Save").finally(()=>{S.creating=false});return}
   const block=e.target.closest(".pblock");if(!block)return;const id=block.dataset.pid;
   if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,meal:p.meal,items:p.items,order:p.order||0}),"Saved")}
-  else if(e.target.matches("[data-additem]")){const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal"><button class="ghost" data-rm type="button">✕</button>`;e.target.parentElement.before(row)}
+  else if(e.target.matches("[data-additem]")){e.target.parentElement.previousElementSibling.before(presetRow("",null))}
   else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove()}
   else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
 });
