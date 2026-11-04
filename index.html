@@ -136,11 +136,15 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .psug button small{font-size:13px;color:var(--ink-soft);white-space:nowrap}
 .psug button.mk{color:var(--accent);font-weight:600}
 .chart.w svg{min-width:0}
+.wlog .primary{height:44px}
+.wlog input[type=date]{min-width:0;max-width:100%}
 #wstats{grid-template-columns:repeat(3,1fr)}
 #wstats .stat{min-width:0;padding:10px}
-.wlog{display:grid;grid-template-columns:1fr 96px auto;gap:8px;align-items:end}
+.wlog{display:grid;grid-template-columns:minmax(0,1fr) 96px auto;gap:8px;align-items:end}
+.wlog label{min-width:0}
+.wlist:empty,.chart.w[hidden]{display:none}
 .wlog label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-soft)}
-.wlog input{font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0;width:100%;box-sizing:border-box}
+.wlog input{-webkit-appearance:none;appearance:none;height:44px;display:block;text-align:left;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0;width:100%;box-sizing:border-box}
 .wlist{background:var(--paper);border:1px solid var(--line);border-radius:10px}
 .wrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
 .wrow:last-child{border-bottom:0}
@@ -607,7 +611,8 @@ function makeLocalDb(){
 const kgf=v=>Number(v).toFixed(1).replace(".",",");
 function renderWeight(){
   const ws=S.weights,goal=Number(S.settings.goalKg)||79;
-  if(!ws.length){$("wstats").innerHTML=`<div style="grid-column:1/-1;font-size:13px;color:var(--ink-soft)">No weigh-ins yet. Log one below.</div>`;$("wchart").innerHTML="";$("wlist").innerHTML="";return}
+  if(!ws.length){$("wstats").innerHTML=`<div style="grid-column:1/-1;font-size:13px;color:var(--ink-soft)">No weigh-ins yet. Log one below.</div>`;$("wchart").innerHTML="";$("wlist").innerHTML="";$("wchart").parentElement.hidden=true;return}
+  $("wchart").parentElement.hidden=false;
   const first=ws[0],last=ws[ws.length-1],ch=last.kg-first.kg,left=last.kg-goal;
   $("wstats").innerHTML=`<div class="stat"><div class="k">Latest</div><div class="v num">${kgf(last.kg)}</div></div>
    <div class="stat"><div class="k">Change</div><div class="v num">${ch>0?"+":""}${kgf(ch)}</div></div>
