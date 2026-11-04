@@ -409,6 +409,15 @@ function renderPresets(){
 }
 const sfold=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const hit=(name,toks)=>{const h=sfold(name);return toks.every(t=>h.includes(t))};
+const splitQty=f=>{const m=/^(\d+) × (.+)$/.exec(String(f||""));return m?{q:+m[1],name:m[2]}:{q:1,name:String(f||"")}};
+// Add q units of an item to a meal; if the same item is already logged there, bump that row instead.
+async function addOrMerge(name,itemId,unit,q,date,meal){
+  const key=sfold(name),c=S.db.collection("entries");
+  const ex=S.entries.find(e=>e.date===date&&e.meal===meal&&!e.preset&&((itemId&&e.item===itemId)||sfold(splitQty(e.food).name)===key));
+  if(ex){const t=splitQty(ex.food).q+q;
+    await S.db.doc("entries/"+ex.id).update({food:`${t} × ${splitQty(ex.food).name}`,kcal:(Number(ex.kcal)||0)+q*unit});ex.food=`${t} × ${splitQty(ex.food).name}`;ex.kcal=(Number(ex.kcal)||0)+q*unit;return}
+  const row={date,meal,food:q>1?`${q} × ${name}`:name,kcal:q*unit,createdAt:now()};if(itemId)row.item=itemId;
+  const ref=await c.add(row);S.entries.push({id:ref&&ref.id,...row})}
 function renderPick(){
   for(const id of Object.keys(S.pick))if(!S.items.some(i=>i.id===id))delete S.pick[id];
   const toks=sfold(S.q).split(" ").filter(Boolean),searching=toks.length>0;
@@ -479,16 +488,17 @@ $("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]
   b.disabled=true;write(async()=>{const c=S.db.collection("entries");for(const it of p.items||[]){await c.add({date:S.date,meal:p.meal,food:it.food,kcal:Number(it.kcal)||0,preset:p.id,createdAt:now()})}},`Added ${p.name}`).then(()=>renderPick())});
 function newEntry(save){const name=$("nname").value.trim(),raw=$("nkcal").value,kcal=Number(raw);
   if(!name||raw===""||!(kcal>=0)){toast("Add a name and a kcal number");return}
-  write(async()=>{const row={date:S.date,meal:S.itemMeal,food:name,kcal,createdAt:now()};
-    if(save&&!S.items.some(i=>norm(i.name)===norm(name))){S.forceItems=true;const ref=await S.db.collection("items").add({name,kcal});if(ref&&ref.id)row.item=ref.id}
-    await S.db.collection("entries").add(row)},save?`Saved and added to ${S.itemMeal.toLowerCase()}`:`Added to ${S.itemMeal.toLowerCase()}`).then(()=>{S.q="";$("srch").value="";$("nkcal").value="";S.nameAuto=true;renderPick();syncNew()})}
+  const date=S.date,meal=S.itemMeal;
+  write(async()=>{let id=null;
+    if(save){const hitI=S.items.find(i=>sfold(i.name)===sfold(name));if(hitI)id=hitI.id;else{S.forceItems=true;const ref=await S.db.collection("items").add({name,kcal});id=ref&&ref.id||null}}
+    await addOrMerge(name,id,kcal,1,date,meal)},save?`Saved and added to ${meal.toLowerCase()}`:`Added to ${meal.toLowerCase()}`).then(()=>{S.q="";$("srch").value="";$("nkcal").value="";S.nameAuto=true;renderPick();syncNew()})}
 $("nonce").addEventListener("click",()=>newEntry(false));
 $("nsave").addEventListener("click",()=>newEntry(true));
 $("pickclear").addEventListener("click",()=>{S.pick={};renderPick()});
 $("itemadd").addEventListener("click",()=>{const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0);if(!ids.length)return;
-  const rows=ids.map(id=>{const it=S.items.find(i=>i.id===id),q=S.pick[id];return it&&{date:S.date,meal:S.itemMeal,food:q>1?`${q} × ${it.name}`:it.name,kcal:q*(Number(it.kcal)||0),item:it.id,createdAt:now()}}).filter(Boolean);
-  const meal=S.itemMeal.toLowerCase(),btn=$("itemadd");btn.disabled=true;
-  write(async()=>{const c=S.db.collection("entries");for(const r of rows)await c.add(r)},`Added ${rows.length} item${rows.length===1?"":"s"} to ${meal}`).then(()=>{S.pick={};renderPick()})});
+  const picks=ids.map(id=>({it:S.items.find(i=>i.id===id),q:S.pick[id]})).filter(x=>x.it);
+  const meal=S.itemMeal,date=S.date,btn=$("itemadd");btn.disabled=true;
+  write(async()=>{for(const {it,q} of picks)await addOrMerge(it.name,it.id,Number(it.kcal)||0,q,date,meal)},`Added ${picks.length} item${picks.length===1?"":"s"} to ${meal.toLowerCase()}`).then(()=>{S.pick={};renderPick()})});
 $("iedit").addEventListener("change",e=>{const r=e.target.closest("[data-iid]");if(!r)return;
   const name=r.querySelector('[data-f="name"]').value.trim(),kcal=Number(r.querySelector('[data-f="kcal"]').value)||0;if(!name)return;
   write(()=>S.db.doc("items/"+r.dataset.iid).set({name,kcal}),"Saved")});
