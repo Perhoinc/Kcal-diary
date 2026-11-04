@@ -62,7 +62,7 @@ button{cursor:pointer}
 .tabs a{padding:5px 12px;font-size:13px;font-weight:600;color:var(--ink-soft);text-decoration:none}
 .tabs a+a{border-left:1px solid var(--line)}
 .tabs a[aria-current="page"]{background:var(--hi);color:var(--on-hi)}
-body[data-view="history"] .today-only,body[data-view="edit"] .today-only,body[data-view="today"] .history-only,body[data-view="edit"] .history-only,body[data-view="today"] .edit-only,body[data-view="history"] .edit-only{display:none!important}
+body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[data-view="weight"] .history-only,body[data-view="weight"] .edit-only,body[data-view="today"] .weight-only,body[data-view="history"] .weight-only,body[data-view="edit"] .weight-only,body[data-view="edit"] .today-only,body[data-view="today"] .history-only,body[data-view="edit"] .history-only,body[data-view="today"] .edit-only,body[data-view="history"] .edit-only{display:none!important}
 .datebar button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 11px;font-weight:600}
 .datebar .today{font-size:13px}
 .datelabel{font-family:var(--f-display);font-weight:600;font-size:17px;min-width:9.5em;text-align:center}
@@ -135,6 +135,17 @@ body[data-view="history"] .today-only,body[data-view="edit"] .today-only,body[da
 .psug button:hover{background:var(--accent-soft)}
 .psug button small{font-size:13px;color:var(--ink-soft);white-space:nowrap}
 .psug button.mk{color:var(--accent);font-weight:600}
+.chart.w svg{min-width:0}
+#wstats{grid-template-columns:repeat(3,1fr)}
+#wstats .stat{min-width:0;padding:10px}
+.wlog{display:grid;grid-template-columns:1fr 96px auto;gap:8px;align-items:end}
+.wlog label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-soft)}
+.wlog input{font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0;width:100%;box-sizing:border-box}
+.wlist{background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.wrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.wrow:last-child{border-bottom:0}
+.wrow button.wedit{border:0;background:transparent;text-align:left;padding:0;font-size:14px;color:var(--ink)}
+.wrow .rm{border:0;background:transparent;color:var(--over);font-size:16px;font-weight:700;padding:2px 6px}
 .pickfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .picksum{font-family:var(--f-display);font-weight:700;font-size:16px}
 .picksum small{font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--ink-soft)}
@@ -211,7 +222,7 @@ summary{cursor:pointer;font-weight:600}
 <main>
   <div class="top">
     <div class="titlerow"><h1>Kcal Diary</h1>
-      <nav class="tabs" aria-label="Views"><a href="#today" id="tab-today">Today</a><a href="#history" id="tab-history">History</a><a href="#edit" id="tab-edit">Edit</a></nav></div>
+      <nav class="tabs" aria-label="Views"><a href="#today" id="tab-today">Today</a><a href="#history" id="tab-history">History</a><a href="#weight" id="tab-weight">Weight</a><a href="#edit" id="tab-edit">Edit</a></nav></div>
     <div class="datebar today-only">
       <button id="prev" aria-label="Previous day">‹</button>
       <div class="datelabel" id="datelabel">–</div>
@@ -267,6 +278,18 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </section>
 
+  <section class="weight-only" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Weight</h2>
+    <div class="stats" id="wstats"></div>
+    <div class="chart w"><div id="wchart"></div></div>
+    <div class="wlog">
+      <label>Date<input id="wdate" type="date"></label>
+      <label>kg<input id="wkg" type="number" inputmode="decimal" step="0.1" min="20" max="400" placeholder="0.0"></label>
+      <button class="primary" id="wadd" type="button">Log</button>
+    </div>
+    <div class="wlist" id="wlist"></div>
+  </section>
+
   <details id="presetbox" class="edit-only">
     <summary>Edit regular meals</summary>
     <div class="pedit" id="pedit"></div>
@@ -283,6 +306,7 @@ summary{cursor:pointer;font-weight:600}
       <label for="s-burn">Estimated daily burn (kcal)</label><input id="s-burn" type="number" step="10" class="num">
       <label for="s-low">Target, low (kcal)</label><input id="s-low" type="number" step="10" class="num">
       <label for="s-high">Target, high (kcal)</label><input id="s-high" type="number" step="10" class="num">
+      <label for="s-goal">Goal weight (kg)</label><input id="s-goal" type="number" step="0.5" class="num">
     </div>
   </details>
   <details id="backupbox" class="edit-only" hidden>
@@ -300,7 +324,7 @@ summary{cursor:pointer;font-weight:600}
 
 <script>
 const MEALS=["Breakfast","Lunch","Dinner","Snack"];
-const S={pick:{},q:"",entries:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),settings:{burn:2700,targetLow:2100,targetHigh:2300},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
+const S={pick:{},q:"",entries:[],weights:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),settings:{burn:2700,targetLow:2100,targetHigh:2300,goalKg:79},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
 const $=id=>document.getElementById(id);
 function defaultMeal(){const h=new Date().getHours()+new Date().getMinutes()/60;return h<10.5?"Breakfast":h<15?"Lunch":h<20.5?"Dinner":"Snack"}
 const norm=s=>String(s||"").trim().toLowerCase();
@@ -471,8 +495,8 @@ $("prev").onclick=()=>{S.date=shift(S.date,-1);S.confirmDel=null;render()};
 $("next").onclick=()=>{S.date=shift(S.date,1);S.confirmDel=null;render()};
 $("today").onclick=()=>{S.date=ymd(new Date());render()};
 $("chart").addEventListener("click",e=>{const d=e.target.closest("[data-day]");if(d){S.date=d.dataset.day;render();location.hash="today";window.scrollTo(0,0)}});
-function route(){const v=location.hash==="#history"?"history":location.hash==="#edit"?"edit":"today";document.body.dataset.view=v;
-  for(const t of ["today","history","edit"]){const el=$("tab-"+t);if(t===v)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")}
+function route(){const v=["#history","#weight","#edit"].includes(location.hash)?location.hash.slice(1):"today";document.body.dataset.view=v;
+  for(const t of ["today","history","weight","edit"]){const el=$("tab-"+t);if(t===v)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")}
   window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
@@ -547,8 +571,8 @@ $("pedit").addEventListener("click",e=>{
   else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove()}
   else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
 });
-["s-burn","s-low","s-high"].forEach(id=>$(id).addEventListener("change",()=>{const v={burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
-function fillSettings(){$("s-burn").value=S.settings.burn;$("s-low").value=S.settings.targetLow;$("s-high").value=S.settings.targetHigh}
+["s-burn","s-low","s-high","s-goal"].forEach(id=>$(id).addEventListener("change",()=>{const v={burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300,goalKg:Number($("s-goal").value)||79};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
+function fillSettings(){$("s-burn").value=S.settings.burn;$("s-low").value=S.settings.targetLow;$("s-high").value=S.settings.targetHigh;$("s-goal").value=S.settings.goalKg}
 fillSettings();render();
 for(const id of ["qa-meals","qa-items"]){const el=$(id),key="kd-open-"+id;
   try{const v=localStorage.getItem(key)??(id==="qa-meals"?localStorage.getItem("kd-qa-open"):null);if(v==="0")el.open=false}catch(_){}
@@ -578,9 +602,43 @@ function makeLocalDb(){
     importAll:o=>{data=JSON.parse(JSON.stringify(o));save();emit()}
   };
 }
+
+// weight
+const kgf=v=>Number(v).toFixed(1).replace(".",",");
+function renderWeight(){
+  const ws=S.weights,goal=Number(S.settings.goalKg)||79;
+  if(!ws.length){$("wstats").innerHTML=`<div style="grid-column:1/-1;font-size:13px;color:var(--ink-soft)">No weigh-ins yet. Log one below.</div>`;$("wchart").innerHTML="";$("wlist").innerHTML="";return}
+  const first=ws[0],last=ws[ws.length-1],ch=last.kg-first.kg,left=last.kg-goal;
+  $("wstats").innerHTML=`<div class="stat"><div class="k">Latest</div><div class="v num">${kgf(last.kg)}</div></div>
+   <div class="stat"><div class="k">Change</div><div class="v num">${ch>0?"+":""}${kgf(ch)}</div></div>
+   <div class="stat"><div class="k">To goal</div><div class="v num">${left>0?kgf(left):"Reached"}</div></div>
+   <div style="grid-column:1/-1;font-size:12px;color:var(--muted)">Change is since ${dayLabel(first.date).split(" · ").pop()}. Goal ${kgf(goal)} kg.</div>`;
+  const pts=ws.slice(-60),W=560,H=200,pl=40,pr=12,pt=12,pb=26;
+  const vals=pts.map(w=>w.kg).concat(goal),lo=Math.floor(Math.min(...vals)-1),hi=Math.ceil(Math.max(...vals)+1);
+  const t0=parse(pts[0].date).getTime(),t1=parse(pts[pts.length-1].date).getTime(),span=Math.max(t1-t0,86400000*6);
+  const x=d=>pl+(W-pl-pr)*((parse(d).getTime()-t0)/span),y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight over time">`;
+  const step=(hi-lo)>12?5:(hi-lo)>6?2:1;
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;
+  svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--ok)" stroke-width="1.5" stroke-dasharray="5 3"/><text x="${W-pr}" y="${y(goal)-4}" text-anchor="end" font-size="10" fill="var(--ok)">goal ${kgf(goal)}</text>`;
+  if(pts.length>1)svg+=`<polyline fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" points="${pts.map(w=>`${x(w.date).toFixed(1)},${y(w.kg).toFixed(1)}`).join(" ")}"/>`;
+  pts.forEach(w=>{svg+=`<circle cx="${x(w.date).toFixed(1)}" cy="${y(w.kg).toFixed(1)}" r="3.5" fill="var(--hi)" stroke="var(--accent)" stroke-width="1.5"><title>${dayLabel(w.date)}: ${kgf(w.kg)} kg</title></circle>`});
+  const fd=d=>{const o=parse(d);return o.getDate()+"/"+(o.getMonth()+1)};
+  svg+=`<text x="${pl}" y="${H-8}" font-size="10" fill="var(--muted)">${fd(pts[0].date)}</text><text x="${W-pr}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--muted)">${fd(pts[pts.length-1].date)}</text></svg>`;
+  $("wchart").innerHTML=svg;
+  $("wlist").innerHTML=ws.slice().reverse().slice(0,30).map(w=>`<div class="wrow" data-wid="${esc(w.id)}"><button class="wedit" type="button" data-wedit>${esc(dayLabel(w.date))}</button><span class="num">${kgf(w.kg)} kg</span><button class="rm" type="button" data-wdel aria-label="Delete weigh-in" ${S.canWrite?"":"disabled"}>✕</button></div>`).join("");
+}
+$("wdate").value=ymd(new Date());
+$("wadd").addEventListener("click",()=>{const date=$("wdate").value,kg=Number($("wkg").value);
+  if(!date||!(kg>=20&&kg<=400)){toast("Enter a date and a weight in kg");return}
+  write(()=>S.db.doc("weights/"+date).set({date,kg:Math.round(kg*10)/10,createdAt:now()}),"Weight saved").then(()=>{$("wkg").value="";$("wdate").value=ymd(new Date())})});
+$("wlist").addEventListener("click",e=>{const row=e.target.closest("[data-wid]");if(!row)return;const w=S.weights.find(x=>x.id===row.dataset.wid);if(!w)return;
+  if(e.target.closest("[data-wdel]")){write(()=>S.db.doc("weights/"+w.id).delete(),"Removed")}
+  else if(e.target.closest("[data-wedit]")){$("wdate").value=w.date;$("wkg").value=w.kg;$("wkg").focus()}});
 function startLog(db){
   const onErr=e=>{if(e&&e.code==="revoked")showStatus("Access to this log has changed. Reload the page.");else showStatus("The log stopped updating. Reload the page.")};
   db.collection("entries").onSnapshot(s=>{S.entries=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded=true;render()},onErr);
+  db.collection("weights").onSnapshot(s=>{S.weights=s.docs.map(d=>({id:d.id,...d.data()})).filter(w=>w.date&&Number(w.kg)>0).sort((a,b)=>a.date<b.date?-1:1);renderWeight()},onErr);
   db.collection("days").onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.days=o;render()},onErr);
   db.collection("presets").onSnapshot(s=>{S.presets=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
     const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
@@ -588,7 +646,7 @@ function startLog(db){
   db.collection("items").onSnapshot(s=>{S.items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.name).localeCompare(norm(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("iedit").contains(a)&&a.tagName==="INPUT";
     if(!typing||S.forceItems){S.forceItems=false;renderItems()}render()},onErr);
-  db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render()},onErr);
+  db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render();renderWeight()},onErr);
 }
 
 // backup
