@@ -62,7 +62,7 @@ button{cursor:pointer}
 .tabs a{padding:5px 12px;font-size:13px;font-weight:600;color:var(--ink-soft);text-decoration:none}
 .tabs a+a{border-left:1px solid var(--line)}
 .tabs a[aria-current="page"]{background:var(--hi);color:var(--on-hi)}
-body[data-view="history"] .today-only,body[data-view="today"] .history-only{display:none!important}
+body[data-view="history"] .today-only,body[data-view="edit"] .today-only,body[data-view="today"] .history-only,body[data-view="edit"] .history-only,body[data-view="today"] .edit-only,body[data-view="history"] .edit-only{display:none!important}
 .datebar button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 11px;font-weight:600}
 .datebar .today{font-size:13px}
 .datelabel{font-family:var(--f-display);font-weight:600;font-size:17px;min-width:9.5em;text-align:center}
@@ -211,7 +211,7 @@ summary{cursor:pointer;font-weight:600}
 <main>
   <div class="top">
     <div class="titlerow"><h1>Kcal Diary</h1>
-      <nav class="tabs" aria-label="Views"><a href="#today" id="tab-today">Today</a><a href="#history" id="tab-history">History</a></nav></div>
+      <nav class="tabs" aria-label="Views"><a href="#today" id="tab-today">Today</a><a href="#history" id="tab-history">History</a><a href="#edit" id="tab-edit">Edit</a></nav></div>
     <div class="datebar today-only">
       <button id="prev" aria-label="Previous day">‹</button>
       <div class="datelabel" id="datelabel">–</div>
@@ -267,17 +267,17 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </section>
 
-  <details id="presetbox" class="today-only">
+  <details id="presetbox" class="edit-only">
     <summary>Edit regular meals</summary>
     <div class="pedit" id="pedit"></div>
   </details>
 
-  <details id="itembox" class="today-only">
+  <details id="itembox" class="edit-only">
     <summary>Edit regular items</summary>
     <div class="iedit" id="iedit"></div>
   </details>
 
-  <details>
+  <details class="edit-only">
     <summary>Targets and daily burn</summary>
     <div class="set">
       <label for="s-burn">Estimated daily burn (kcal)</label><input id="s-burn" type="number" step="10" class="num">
@@ -285,7 +285,7 @@ summary{cursor:pointer;font-weight:600}
       <label for="s-high">Target, high (kcal)</label><input id="s-high" type="number" step="10" class="num">
     </div>
   </details>
-  <details id="backupbox" class="today-only" hidden>
+  <details id="backupbox" class="edit-only" hidden>
     <summary>Backup</summary>
     <div class="backup">
       <p>Your log is saved in this browser on this device only. Export a backup now and then, and use it to move your log to another device.</p>
@@ -458,9 +458,9 @@ $("prev").onclick=()=>{S.date=shift(S.date,-1);S.confirmDel=null;render()};
 $("next").onclick=()=>{S.date=shift(S.date,1);S.confirmDel=null;render()};
 $("today").onclick=()=>{S.date=ymd(new Date());render()};
 $("chart").addEventListener("click",e=>{const d=e.target.closest("[data-day]");if(d){S.date=d.dataset.day;render();location.hash="today";window.scrollTo(0,0)}});
-function route(){const v=location.hash==="#history"?"history":"today";document.body.dataset.view=v;
-  $("tab-today").toggleAttribute("aria-current",v==="today");$("tab-history").toggleAttribute("aria-current",v==="history");
-  if(v==="today")$("tab-today").setAttribute("aria-current","page");else $("tab-history").setAttribute("aria-current","page")}
+function route(){const v=location.hash==="#history"?"history":location.hash==="#edit"?"edit":"today";document.body.dataset.view=v;
+  for(const t of ["today","history","edit"]){const el=$("tab-"+t);if(t===v)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")}
+  window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
 $("quick").addEventListener("click",e=>{const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
