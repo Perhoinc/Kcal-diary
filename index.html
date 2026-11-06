@@ -97,11 +97,20 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 /* quick add */
 .quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .qbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--paper);border:1.5px solid var(--accent);color:var(--ink);border-radius:10px;padding:10px 12px}
+.qcard{position:relative;display:flex;flex-direction:column;align-self:start;min-width:0}
+.qcard .qbtn{width:100%;padding-right:40px}
+.qcard .qbtn .qi{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
+.qinfo{position:absolute;top:6px;right:6px;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--accent);font-size:17px;font-weight:700;line-height:1;padding:0}
+.qinfo[aria-expanded=true]{background:var(--accent-soft)}
+.qdetail{margin-top:6px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+.qdetail .qd{display:flex;justify-content:space-between;gap:10px;padding:4px 0}
+.qdetail .qd+.qd{border-top:1px solid var(--line)}
+.qdetail .qd span:last-child{white-space:nowrap;color:var(--ink-soft)}
 .qbtn:hover{background:var(--accent-soft)}
 .qbtn b{font-weight:700}
 .qbtn span{font-size:13px;color:var(--ink-soft)}
 .qbtn.done{border-style:dashed;border-color:var(--line)}
-.qbtn.done span::after{content:" · added"}
+.qbtn.done span.num::after{content:" · added"}
 .itemsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
 .seg button{border:0;background:transparent;padding:5px 10px;font-size:13px;font-weight:600;color:var(--ink-soft)}
@@ -249,13 +258,6 @@ summary{cursor:pointer;font-weight:600}
     </div>
   </section>
 
-  <details class="qa today-only" id="qa-meals" open>
-    <summary><h2>Regular meals</h2></summary>
-    <div class="qa-body">
-    <div class="quick" id="quick"><div class="empty">Your regular meals appear here once the log has loaded.</div></div>
-    </div>
-  </details>
-
   <details class="qa today-only" id="qa-items" open>
     <summary><h2>Find &amp; add</h2></summary>
     <div class="qa-body">
@@ -269,6 +271,13 @@ summary{cursor:pointer;font-weight:600}
     </div>
     <div class="pickfoot"><span class="picksum num" id="picksum" aria-live="polite"><small>Tap items to select them</small></span>
       <span style="display:flex;gap:8px"><button class="ghost" id="pickclear" type="button" hidden>Clear</button><button class="primary" id="itemadd" type="button" disabled>Add</button></span></div>
+    </div>
+  </details>
+
+  <details class="qa today-only" id="qa-meals" open>
+    <summary><h2>Regular meals</h2></summary>
+    <div class="qa-body">
+    <div class="quick" id="quick"><div class="empty">Your regular meals appear here once the log has loaded.</div></div>
     </div>
   </details>
 
@@ -368,9 +377,9 @@ function render(){
   const q=$("quick");
   if(S.loaded){
     if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`;
-    else q.innerHTML=S.presets.map(p=>{const k=(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);const done=list.some(e=>e.preset===p.id);
-      if(!(p.items||[]).some(i=>i.food))return "";
-      return `<button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${esc(p.meal)} · ${n(k)} kcal</span></button>`}).join("");
+    else q.innerHTML=S.presets.map(p=>{const its=(p.items||[]).filter(i=>i.food),k=its.reduce((a,i)=>a+(Number(i.kcal)||0),0),done=list.some(e=>e.preset===p.id);
+      if(!its.length)return "";const open=S.qopen&&S.qopen[p.id];
+      return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${esc(p.meal)} · ${n(k)} kcal</span><span class="qi">${esc(its.map(i=>i.food).join(", "))}</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}</div>`}).join("");
   }
 
   // single items
@@ -504,7 +513,8 @@ function route(){const v=["#history","#weight","#edit"].includes(location.hash)?
   window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
-$("quick").addEventListener("click",e=>{const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
+$("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]");if(inf){S.qopen=S.qopen||{};S.qopen[inf.dataset.qinfo]=!S.qopen[inf.dataset.qinfo];render();return}
+  const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
   write(()=>addMealItems(p),`Added ${p.name}`)});
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
 $("itemmeal").addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}});
