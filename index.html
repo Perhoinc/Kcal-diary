@@ -410,7 +410,7 @@ function render(){
     const items=list.filter(e=>e.meal===m).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
     const sub=items.reduce((a,e)=>a+(Number(e.kcal)||0),0);
     return `<details class="meal" data-meal="${m}"${S.mealClosed[m]?"":" open"}><summary class="meal-h"><span>${m}</span><span class="num">${n(sub)} kcal</span></summary>`+
-      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(e.food)),open=S.openMenu===e.id,editing=S.editId===e.id;
+      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(splitQty(e.food).name)),open=S.openMenu===e.id,editing=S.editId===e.id;
         return `<div class="entry"><span class="food">${esc(e.food)}${e.note?`<span class="note">${esc(e.note)}</span>`:""}</span>
         ${editing?`<input class="kin" type="number" min="0" step="1" value="${Number(e.kcal)||0}" data-id="${id}" aria-label="kcal for ${esc(e.food)}"><button class="mbtn" data-done="${id}" type="button">Done</button>`
           :`<span class="kv num">${n(e.kcal)}</span>${S.canWrite?`<button class="more" data-more="${id}" type="button" aria-haspopup="menu" aria-expanded="${open}" aria-label="Options for ${esc(e.food)}">⋯</button>`:"<span></span>"}`}
@@ -469,7 +469,7 @@ async function addOrMerge(name,itemId,unit,q,date,meal){
   if(ex){const t=splitQty(ex.food).q+q;
     await S.db.doc("entries/"+ex.id).update({food:`${t} × ${splitQty(ex.food).name}`,kcal:(Number(ex.kcal)||0)+q*unit});ex.food=`${t} × ${splitQty(ex.food).name}`;ex.kcal=(Number(ex.kcal)||0)+q*unit;return}
   const row={date,meal,food:q>1?`${q} × ${name}`:name,kcal:q*unit,createdAt:now()};if(itemId)row.item=itemId;
-  const ref=await c.add(row);S.entries.push({id:ref&&ref.id,...row})}
+  await c.add(row)}
 // A regular meal already logged today needs a confirmation before it is added a second time.
 function okAgain(p){return !S.entries.some(e=>e.date===S.date&&e.preset===p.id)||confirm(`${p.name} is already logged today. Add it again?`)}
 async function addMealItems(p){for(const it of p.items||[]){const {q,name}=splitQty(it.food),k=Number(it.kcal)||0;
@@ -581,8 +581,8 @@ $("entries").addEventListener("click",e=>{
   const ed=e.target.closest("[data-edit]");if(ed){S.editId=ed.dataset.edit;S.openMenu=null;render();const inp=$("entries").querySelector(".kin");if(inp){inp.focus();inp.select()}return}
   const dn=e.target.closest("[data-done]");if(dn){S.editId=null;render();return}
   const s=e.target.closest("[data-star]");if(s){const en=S.entries.find(x=>x.id===s.dataset.star);if(!en)return;
-    const ex=S.items.find(i=>norm(i.name)===norm(en.food));S.openMenu=null;if(ex){toast("Already a regular item");render();return}
-    S.forceItems=true;write(()=>S.db.collection("items").add({name:en.food,kcal:Number(en.kcal)||0}),"Saved as regular item");render();return}
+    const {q:sq,name:sn}=splitQty(en.food),ex=S.items.find(i=>norm(i.name)===norm(sn));S.openMenu=null;if(ex){toast("Already a regular item");render();return}
+    S.forceItems=true;write(()=>S.db.collection("items").add({name:sn,kcal:Math.round((Number(en.kcal)||0)/sq)}),"Saved as regular item");render();return}
   const b=e.target.closest("[data-del]");if(!b)return;const id=b.dataset.del;
   if(S.confirmDel===id){S.confirmDel=null;S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else{S.confirmDel=id;render();setTimeout(()=>{if(S.confirmDel===id){S.confirmDel=null;render()}},3000)}});
 document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(".menu,.more"))return;S.openMenu=null;S.confirmDel=null;render()});
