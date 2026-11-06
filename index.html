@@ -459,6 +459,8 @@ async function addOrMerge(name,itemId,unit,q,date,meal){
     await S.db.doc("entries/"+ex.id).update({food:`${t} × ${splitQty(ex.food).name}`,kcal:(Number(ex.kcal)||0)+q*unit});ex.food=`${t} × ${splitQty(ex.food).name}`;ex.kcal=(Number(ex.kcal)||0)+q*unit;return}
   const row={date,meal,food:q>1?`${q} × ${name}`:name,kcal:q*unit,createdAt:now()};if(itemId)row.item=itemId;
   const ref=await c.add(row);S.entries.push({id:ref&&ref.id,...row})}
+// A regular meal already logged today needs a confirmation before it is added a second time.
+function okAgain(p){return !S.entries.some(e=>e.date===S.date&&e.preset===p.id)||confirm(`${p.name} is already logged today. Add it again?`)}
 async function addMealItems(p){for(const it of p.items||[]){const {q,name}=splitQty(it.food),k=Number(it.kcal)||0;
   const ex=S.entries.find(e=>e.date===S.date&&e.meal===p.meal&&sfold(splitQty(e.food).name)===sfold(name));
   if(ex)await addOrMerge(name,null,k/q,q,S.date,p.meal);
@@ -519,6 +521,7 @@ window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
 $("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]");if(inf){S.qopen=S.qopen||{};S.qopen[inf.dataset.qinfo]=!S.qopen[inf.dataset.qinfo];render();return}
   const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
+  if(!okAgain(p))return;
   write(()=>addMealItems(p),`Added ${p.name}`)});
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
 $("itemmeal").addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}});
@@ -530,7 +533,7 @@ $("picklist").addEventListener("click",e=>{const r=e.target.closest("[data-pid]"
   if(!S.pick[id])delete S.pick[id];renderPick()});
 $("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;renderPick();syncNew()});
 $("nname").addEventListener("input",()=>{S.nameAuto=false});
-$("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;
+$("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;if(!okAgain(p))return;
   b.disabled=true;write(()=>addMealItems(p),`Added ${p.name}`).then(()=>renderPick())});
 function newEntry(save){const name=$("nname").value.trim(),raw=$("nkcal").value,kcal=Number(raw);
   if(!name||raw===""||!(kcal>=0)){toast("Add a name and a kcal number");return}
