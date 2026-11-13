@@ -135,6 +135,21 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .mrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--accent-soft)}
 .mrow .tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin-right:6px}
 .mrow .pk{font-size:13px;color:var(--ink-soft);white-space:nowrap}
+.prow.w{grid-template-columns:1fr auto;row-gap:6px}
+.prow.w .wline{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.prow .sub{display:block;font-size:12px;color:var(--ink-soft)}
+.prow .addw{border:1px solid var(--line);background:var(--paper);color:var(--accent);border-radius:8px;padding:6px 12px;font-weight:700;font-size:14px}
+.step .pin,.menu .step .qin{width:46px;height:30px;box-sizing:border-box;border:0;border-radius:0;background:transparent;text-align:right;font-size:15px;font-weight:700;color:var(--ink);padding:0;-moz-appearance:textfield;appearance:textfield;font-family:inherit}
+.step .pin::-webkit-outer-spin-button,.step .pin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.step .u{font-size:13px;color:var(--ink-soft);padding:0 2px 0 3px;min-width:0;font-weight:400}
+.step .u:empty{display:none}
+.wk{font-weight:700;white-space:nowrap}
+.nmode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.nmode button{border:0;background:transparent;padding:7px 4px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.nmode button+button{border-left:1px solid var(--line)}
+.nmode button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.nres{display:flex;justify-content:space-between;align-items:baseline;background:var(--hi-soft);border-radius:8px;padding:7px 10px;font-size:13px}
+.nres b{font-size:16px}
 .newrow{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--accent);border-radius:10px;padding:10px;background:var(--paper)}
 .newrow .nl{display:flex;gap:8px}
 .newrow input{font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0}
@@ -190,6 +205,15 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .mbtn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:3px 9px;font-size:13px;font-weight:600}
 .iedit{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .iedit .ir{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
+.iedit .ic{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.iedit .ic input,.iedit .ic select{font-size:16px;padding:6px 8px}
+.iedit .ic .r1{display:flex;gap:6px}
+.iedit .ic .r1 input{flex:1}
+.iedit .ic .r2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:end}
+.iedit .ic label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-soft);min-width:0}
+.iedit .ic select{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 6px;font-size:14px;min-width:0}
+.iedit .ic[data-mode="piece"] .usual{visibility:hidden}
+.iedit .ic .hint{font-size:12px;color:var(--ink-soft)}
 .iedit input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;min-width:0}
 
 /* entries */
@@ -280,7 +304,9 @@ summary{cursor:pointer;font-weight:600}
     <input class="srch" id="srch" type="search" placeholder="Search regular items and meals" aria-label="Search regular items and meals" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="picklist" id="picklist"><div class="empty" style="padding:10px">Loading items…</div></div>
     <div class="newrow" id="newrow" hidden>
-      <div class="nl"><input id="nname" placeholder="Name" aria-label="New item name"><input id="nkcal" class="k" type="number" inputmode="numeric" min="0" step="1" placeholder="kcal" aria-label="kcal"></div>
+      <div class="nmode" id="nmode" role="group" aria-label="How to count it"><button type="button" data-nm="piece" aria-pressed="true">kcal</button><button type="button" data-nm="g" aria-pressed="false">per 100 g</button><button type="button" data-nm="dl" aria-pressed="false">per dl</button></div>
+      <div class="nl"><input id="nname" placeholder="Name" aria-label="New item name"><input id="nkcal" class="k" type="number" inputmode="decimal" min="0" step="any" placeholder="kcal" aria-label="kcal"><input id="namt" class="k" type="number" inputmode="decimal" min="0" step="any" placeholder="g" aria-label="Amount" hidden></div>
+      <div class="nres" id="nres" hidden></div>
       <div class="na"><button class="ghost" id="nonce" type="button">Log once</button><button class="primary" id="nsave" type="button">Save &amp; log</button></div>
     </div>
     <div class="pickfoot"><span class="picksum num" id="picksum" aria-live="polite"><small>Tap items to select them</small></span>
@@ -410,11 +436,11 @@ function render(){
     const items=list.filter(e=>e.meal===m).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
     const sub=items.reduce((a,e)=>a+(Number(e.kcal)||0),0);
     return `<details class="meal" data-meal="${m}"${S.mealClosed[m]?"":" open"}><summary class="meal-h"><span>${m}</span><span class="num">${n(sub)} kcal</span></summary>`+
-      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(splitQty(e.food).name)),open=S.openMenu===e.id,editing=S.editId===e.id;
+      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(splitQty(e.food).name)||norm(i.name)===norm(e.food)),open=S.openMenu===e.id,editing=S.editId===e.id;
         return `<div class="entry"><span class="food">${esc(e.food)}${e.note?`<span class="note">${esc(e.note)}</span>`:""}</span>
         ${editing?`<input class="kin" type="number" min="0" step="1" value="${Number(e.kcal)||0}" data-id="${id}" aria-label="kcal for ${esc(e.food)}"><button class="mbtn" data-done="${id}" type="button">Done</button>`
           :`<span class="kv num">${n(e.kcal)}</span>${S.canWrite?`<button class="more" data-more="${id}" type="button" aria-haspopup="menu" aria-expanded="${open}" aria-label="Options for ${esc(e.food)}">⋯</button>`:"<span></span>"}`}
-        ${open?`<div class="menu" role="menu"><span class="step" role="group" aria-label="Amount"><button type="button" data-qm="${id}" aria-label="One less">−</button><input class="qin" type="number" inputmode="decimal" min="0" step="0.5" value="${splitQty(e.food).q}" data-qin="${id}" aria-label="Amount"><button type="button" data-qp="${id}" aria-label="One more">+</button></span><button role="menuitem" type="button" class="icon" data-edit="${id}" title="Edit kcal" aria-label="Edit kcal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14.5 5.5l3 3"/></svg></button><button role="menuitem" type="button" class="icon star${saved?" on":""}" data-star="${id}" ${saved?"disabled":""} title="${saved?"Saved as regular item":"Save as regular item"}" aria-label="${saved?"Saved as regular item":"Save as regular item"}">${saved?"★":"☆"}</button></div>`:""}
+        ${open?`<div class="menu" role="menu"><span class="step" role="group" aria-label="Amount"><button type="button" data-qm="${id}" aria-label="Less">−</button><input class="qin" type="number" inputmode="decimal" min="0" step="any" value="${splitQty(e.food).q}" data-qin="${id}" aria-label="Amount"><span class="u">${splitQty(e.food).unit}</span><button type="button" data-qp="${id}" aria-label="More">+</button></span><button role="menuitem" type="button" class="icon" data-edit="${id}" title="Edit kcal" aria-label="Edit kcal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14.5 5.5l3 3"/></svg></button><button role="menuitem" type="button" class="icon star${saved?" on":""}" data-star="${id}" ${saved?"disabled":""} title="${saved?"Saved as regular item":"Save as regular item"}" aria-label="${saved?"Saved as regular item":"Save as regular item"}">${saved?"★":"☆"}</button></div>`:""}
         </div>`}).join("")+`</details>`}).join("");
 
   renderHistory();
@@ -461,38 +487,61 @@ function renderPresets(){
 const sfold=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const hit=(name,toks)=>{const h=sfold(name);return toks.every(t=>h.includes(t))};
 S.mealClosed=(()=>{try{return JSON.parse(localStorage.getItem("kd-mealclosed")||"{}")||{}}catch(_){return {}}})();
-const splitQty=f=>{const m=/^(\d+(?:[.,]\d+)?) × (.+)$/.exec(String(f||""));return m?{q:parseFloat(m[1].replace(",",".")),name:m[2]}:{q:1,name:String(f||"")}};
-// Add q units of an item to a meal; if the same item is already logged there, bump that row instead.
-async function addOrMerge(name,itemId,unit,q,date,meal){
+// "2 × Egg" → count 2; "50 g Kvarg" / "1,5 dl Milk" → weighed amount; anything else → 1 of it.
+const splitQty=f=>{f=String(f||"");let m=/^(\d+(?:[.,]\d+)?) ?(g|dl) (.+)$/.exec(f);if(m)return {q:parseFloat(m[1].replace(",",".")),unit:m[2],name:m[3]};
+  m=/^(\d+(?:[.,]\d+)?) × (.+)$/.exec(f);return m?{q:parseFloat(m[1].replace(",",".")),unit:"",name:m[2]}:{q:1,unit:"",name:f}};
+const fmtN=v=>String(Math.round(v*100)/100).replace(".",",");
+const fmtFood=(q,unit,name)=>unit?`${fmtN(q)} ${unit} ${name}`:(q===1?name:`${fmtN(q)} × ${name}`);
+// Items: mode "g" or "dl" means kcal comes from per100 (per 100 g, or per 100 ml = per dl); no mode = fixed kcal per piece.
+const isW=it=>it&&(it.mode==="g"||it.mode==="dl")&&Number(it.per100)>0;
+const perUnit=it=>isW(it)?(it.mode==="g"?Number(it.per100)/100:Number(it.per100)):(Number(it&&it.kcal)||0);
+const usualOf=it=>Number(it.usual)>0?Number(it.usual):(it.mode==="g"?100:1);
+const stepOf=u=>u==="g"?10:u==="dl"?0.5:1;
+const roundAmt=(v,u)=>u==="g"?Math.round(v):u==="dl"?Math.round(v*10)/10:Math.round(v*2)/2;
+// Add q units (pieces, g or dl) of an item to a meal; if the same item in the same unit is already logged there, bump that row instead.
+async function addOrMerge(name,itemId,unit,q,date,meal,u=""){
   const key=sfold(name),c=S.db.collection("entries");
-  const ex=S.entries.find(e=>e.date===date&&e.meal===meal&&((itemId&&e.item===itemId)||sfold(splitQty(e.food).name)===key));
-  if(ex){const t=splitQty(ex.food).q+q;
-    await S.db.doc("entries/"+ex.id).update({food:`${t} × ${splitQty(ex.food).name}`,kcal:(Number(ex.kcal)||0)+q*unit});ex.food=`${t} × ${splitQty(ex.food).name}`;ex.kcal=(Number(ex.kcal)||0)+q*unit;return}
-  const row={date,meal,food:q>1?`${q} × ${name}`:name,kcal:q*unit,createdAt:now()};if(itemId)row.item=itemId;
+  // A piece item whose own name starts with an amount ("1dl oatmeal") matches its row by the full text.
+  const sqOf=e=>u===""&&sfold(e.food)===key?{q:1,unit:"",name:e.food}:splitQty(e.food);
+  const ex=S.entries.find(e=>{if(e.date!==date||e.meal!==meal)return false;const sq=sqOf(e);return sq.unit===u&&((itemId&&e.item===itemId)||sfold(sq.name)===key)});
+  if(ex){const sq=sqOf(ex),t=roundAmt(sq.q+q,u);
+    await S.db.doc("entries/"+ex.id).update({food:fmtFood(t,u,sq.name),kcal:Math.round((Number(ex.kcal)||0)+q*unit)});return}
+  const row={date,meal,food:fmtFood(q,u,name),kcal:Math.round(q*unit),createdAt:now()};if(itemId)row.item=itemId;
   await c.add(row)}
 // A regular meal already logged today needs a confirmation before it is added a second time.
 function okAgain(p){return !S.entries.some(e=>e.date===S.date&&e.preset===p.id)||confirm(`${p.name} is already logged today. Add it again?`)}
-async function addMealItems(p){for(const it of p.items||[]){const {q,name}=splitQty(it.food),k=Number(it.kcal)||0;
-  const ex=S.entries.find(e=>e.date===S.date&&e.meal===p.meal&&sfold(splitQty(e.food).name)===sfold(name));
-  if(ex)await addOrMerge(name,null,k/q,q,S.date,p.meal);
+async function addMealItems(p){for(const it of p.items||[]){const {q,unit:u,name}=splitQty(it.food),k=Number(it.kcal)||0;
+  const ex=S.entries.find(e=>{if(e.date!==S.date||e.meal!==p.meal)return false;const sq=splitQty(e.food);return sq.unit===u&&sfold(sq.name)===sfold(name)});
+  if(ex)await addOrMerge(name,null,k/q,q,S.date,p.meal,u);
   else await S.db.collection("entries").add({date:S.date,meal:p.meal,food:it.food,kcal:k,preset:p.id,createdAt:now()})}}
-function renderPick(){
-  for(const id of Object.keys(S.pick))if(!S.items.some(i=>i.id===id))delete S.pick[id];
-  const toks=sfold(S.q).split(" ").filter(Boolean),searching=toks.length>0;
-  const items=searching?S.items.filter(it=>hit(it.name,toks)):S.items;
-  const meals=searching?S.presets.filter(p=>hit(p.name,toks)):[];
-  const box=$("picklist"),top=box.scrollTop;
-  const mrows=meals.map(p=>{const k=(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${n(k)} kcal</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>Add</button></div>`}).join("");
-  const irows=items.map(it=>{const q=S.pick[it.id]||0;return `<div class="prow${q?" on":""}" data-pid="${esc(it.id)}">
-    <button class="pname" type="button" data-ptog>${esc(it.name)}</button><span class="pk num">${n(it.kcal)} kcal</span>
-    <span class="step"><button type="button" data-pm aria-label="One less ${esc(it.name)}" ${q?"":"disabled"}>−</button><span class="num" aria-label="Count">${q}</span><button type="button" data-pp aria-label="One more ${esc(it.name)}" ${S.canWrite?"":"disabled"}>+</button></span></div>`}).join("");
-  box.innerHTML=(mrows+irows)||(searching?`<div class="empty" style="padding:10px">No regular item or meal matches “${esc(S.q.trim())}”.</div>`:`<div class="empty" style="padding:10px">No regular items yet. Tap ⋯ then ☆ on a logged item to save one.</div>`);
-  box.scrollTop=top;
-  const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0);
-  const count=ids.reduce((a,id)=>a+S.pick[id],0),kcal=ids.reduce((a,id)=>a+S.pick[id]*(Number((S.items.find(i=>i.id===id)||{}).kcal)||0),0);
+const pickKcal=(it,q)=>q*perUnit(it);
+function pickSum(){
+  const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0&&S.items.some(i=>i.id===id));
+  const count=ids.length,kcal=ids.reduce((a,id)=>a+pickKcal(S.items.find(i=>i.id===id),S.pick[id]),0);
   $("picksum").innerHTML=count?`${n(kcal)} kcal <small>· ${count} item${count===1?"":"s"}</small>`:`<small>Tap items to select them</small>`;
   $("itemadd").disabled=!S.canWrite||!count;$("itemadd").textContent=count?`Add to ${S.itemMeal.toLowerCase()}`:"Add";
   $("pickclear").hidden=!count;
+}
+function renderPick(){
+  for(const id of Object.keys(S.pick))if(!S.items.some(i=>i.id===id))delete S.pick[id];
+  const box=$("picklist"),ae=document.activeElement;
+  if(ae&&ae.classList&&ae.classList.contains("pin")&&box.contains(ae)){pickSum();return}
+  const toks=sfold(S.q).split(" ").filter(Boolean),searching=toks.length>0;
+  const items=searching?S.items.filter(it=>hit(it.name,toks)):S.items;
+  const meals=searching?S.presets.filter(p=>hit(p.name,toks)):[];
+  const top=box.scrollTop;
+  const mrows=meals.map(p=>{const k=(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${n(k)} kcal</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>Add</button></div>`}).join("");
+  const irows=items.map(it=>{const q=S.pick[it.id]||0,id=esc(it.id),nm=esc(it.name);
+    if(isW(it)){const u=it.mode,lab=u==="g"?`${n(it.per100)} kcal / 100 g`:`${n(it.per100)} kcal / dl`;
+      return `<div class="prow w${q?" on":""}" data-pid="${id}"><button class="pname" type="button" data-ptog>${nm}<span class="sub">${lab}</span></button>`+
+      (q?`<span></span><div class="wline"><span class="step"><button type="button" data-pm aria-label="${stepOf(u)} ${u} less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${q}" data-pin aria-label="Amount in ${u}"><span class="u">${u}</span><button type="button" data-pp aria-label="${stepOf(u)} ${u} more">+</button></span><span class="wk num" data-wk>= ${n(pickKcal(it,q))} kcal</span></div>`
+        :`<button class="addw" type="button" data-pp ${S.canWrite?"":"disabled"}>+ ${u}</button>`)+`</div>`}
+    return `<div class="prow${q?" on":""}" data-pid="${id}">
+    <button class="pname" type="button" data-ptog>${nm}</button><span class="pk num">${n(it.kcal)} kcal</span>
+    <span class="step"><button type="button" data-pm aria-label="One less ${nm}" ${q?"":"disabled"}>−</button><span class="num" aria-label="Count">${q}</span><button type="button" data-pp aria-label="One more ${nm}" ${S.canWrite?"":"disabled"}>+</button></span></div>`}).join("");
+  box.innerHTML=(mrows+irows)||(searching?`<div class="empty" style="padding:10px">No regular item or meal matches “${esc(S.q.trim())}”.</div>`:`<div class="empty" style="padding:10px">No regular items yet. Tap ⋯ then ☆ on a logged item to save one.</div>`);
+  box.scrollTop=top;
+  pickSum();
 }
 function syncNew(){
   const q=S.q.trim(),exact=S.items.some(i=>sfold(i.name)===sfold(q))||S.presets.some(p=>sfold(p.name)===sfold(q));
@@ -500,11 +549,25 @@ function syncNew(){
   if(row.hidden!==!show)row.hidden=!show;
   if(show&&S.nameAuto!==false)$("nname").value=q;
 }
+function itemCard(it,isNew){const m=isW(it)?it.mode:(it&&(it.mode==="g"||it.mode==="dl")?it.mode:"piece"),id=isNew?"":esc(it.id);
+  const val=m==="piece"?(it?Number(it.kcal)||0:""):(it?Number(it.per100)||"":""),us=m==="piece"?"":(it&&Number(it.usual)>0?it.usual:"");
+  const lab=m==="piece"?"kcal each":m==="g"?"kcal / 100 g":"kcal / 100 ml",ul=m==="dl"?"Usual dl":"Usual g";
+  return `<div class="ic"${isNew?' id="newitem"':` data-iid="${id}"`} data-mode="${m}">
+    <div class="r1"><input value="${isNew?"":esc(it.name)}" data-f="name" placeholder="${isNew?"New item, e.g. Kvarg naturell":""}" aria-label="${isNew?"New item name":"Item name"}">${isNew?`<button class="primary" data-iadd type="button">Add</button>`:`<button class="ghost" data-idel type="button">✕</button>`}</div>
+    <div class="r2"><label>Counted<select data-f="mode"><option value="piece"${m==="piece"?" selected":""}>per piece</option><option value="g"${m==="g"?" selected":""}>per 100 g</option><option value="dl"${m==="dl"?" selected":""}>per dl</option></select></label>
+      <label><span data-lab>${lab}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${val}" data-f="num"></label>
+      <label class="usual"><span data-ul>${ul}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${us}" data-f="usual"></label></div></div>`}
 function renderItems(){
-  $("iedit").innerHTML=S.items.map(it=>`<div class="ir" data-iid="${esc(it.id)}"><input value="${esc(it.name)}" data-f="name" aria-label="Item name"><input type="number" class="num" value="${Number(it.kcal)||0}" data-f="kcal" aria-label="kcal"><button class="ghost" data-idel type="button">✕</button></div>`).join("")+
-    `<div class="ir" id="newitem"><input data-f="name" placeholder="New item, e.g. 1 boiled egg" aria-label="New item name"><input type="number" class="num" data-f="kcal" placeholder="kcal" aria-label="New item kcal"><button class="primary" data-iadd type="button">Add</button></div>
-     <div style="font-size:12px;color:var(--muted)">Changes to name or kcal save when you leave the field.</div>`;
+  $("iedit").innerHTML=S.items.map(it=>itemCard(it,false)).join("")+itemCard(null,true)+
+    `<div style="font-size:12px;color:var(--muted)">Changes save when you leave a field. For per 100 g and per dl items, type the number from the label (per dl uses the label's per 100 ml). Switching how an item is counted only affects what you log from now on.</div>`;
 }
+function readItemCard(c){const name=c.querySelector('[data-f="name"]').value.trim(),m=c.querySelector('[data-f="mode"]').value,num=Number(c.querySelector('[data-f="num"]').value),us=Number(c.querySelector('[data-f="usual"]').value);
+  if(!name)return null;
+  if(m==="piece")return num>=0&&c.querySelector('[data-f="num"]').value!==""?{name,kcal:num}:null;
+  if(!(num>0))return null;const usual=us>0?roundAmt(us,m):(m==="g"?100:1);
+  return {name,mode:m,per100:num,usual,kcal:Math.round(usual*(m==="g"?num/100:num))}}
+function syncItemCard(c){const m=c.querySelector('[data-f="mode"]').value;c.dataset.mode=m;
+  c.querySelector("[data-lab]").textContent=m==="piece"?"kcal each":m==="g"?"kcal / 100 g":"kcal / 100 ml";c.querySelector("[data-ul]").textContent=m==="dl"?"Usual dl":"Usual g"}
 function readPreset(block){
   const p=S.presets.find(x=>x.id===block.dataset.pid);const items=[];
   block.querySelectorAll(".pi").forEach(r=>{const f=r.querySelector('[data-f="food"]').value.trim();const k=Number(r.querySelector('[data-f="kcal"]').value)||0;if(f)items.push({food:f,kcal:k})});
@@ -536,53 +599,76 @@ $("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]
   write(()=>addMealItems(p),`Added ${p.name}`)});
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
 $("itemmeal").addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}});
-$("picklist").addEventListener("click",e=>{const r=e.target.closest("[data-pid]");if(!r)return;const id=r.dataset.pid,q=S.pick[id]||0;
-  if(e.target.closest("[data-pp]"))S.pick[id]=q+1;
-  else if(e.target.closest("[data-pm]"))S.pick[id]=Math.max(0,q-1);
-  else if(e.target.closest("[data-ptog]")||e.target.closest(".pk"))S.pick[id]=q?0:1;
+$("picklist").addEventListener("click",e=>{const r=e.target.closest("[data-pid]");if(!r)return;const id=r.dataset.pid,q=S.pick[id]||0,it=S.items.find(i=>i.id===id);if(!it)return;
+  const w=isW(it),st=w?stepOf(it.mode):1,start=w?usualOf(it):1;
+  if(e.target.closest("[data-pp]"))S.pick[id]=q?roundAmt(q+st,w?it.mode:""):start;
+  else if(e.target.closest("[data-pm]"))S.pick[id]=Math.max(0,roundAmt(q-st,w?it.mode:""));
+  else if(e.target.closest("[data-ptog]")||e.target.closest(".pk"))S.pick[id]=q?0:start;
   else return;
   if(!S.pick[id])delete S.pick[id];renderPick()});
+$("picklist").addEventListener("input",e=>{const i=e.target.closest("[data-pin]");if(!i)return;const r=i.closest("[data-pid]"),it=S.items.find(x=>x.id===r.dataset.pid);if(!it)return;
+  const v=Number(i.value);if(v>0)S.pick[it.id]=v;const k=r.querySelector("[data-wk]");if(k)k.textContent=`= ${n(pickKcal(it,v>0?v:0))} kcal`;pickSum()});
+$("picklist").addEventListener("change",e=>{const i=e.target.closest("[data-pin]");if(!i)return;const id=i.closest("[data-pid]").dataset.pid,it=S.items.find(x=>x.id===id);const v=roundAmt(Number(i.value)||0,it?it.mode:"g");
+  if(v>0)S.pick[id]=v;else delete S.pick[id];i.blur();renderPick()});
+$("picklist").addEventListener("keydown",e=>{if(e.target.matches("[data-pin]")&&e.key==="Enter"){e.preventDefault();e.target.blur()}});
 $("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;renderPick();syncNew()});
 $("nname").addEventListener("input",()=>{S.nameAuto=false});
 $("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;if(!okAgain(p))return;
   b.disabled=true;write(()=>addMealItems(p),`Added ${p.name}`).then(()=>renderPick())});
-function newEntry(save){const name=$("nname").value.trim(),raw=$("nkcal").value,kcal=Number(raw);
-  if(!name||raw===""||!(kcal>=0)){toast("Add a name and a kcal number");return}
-  const date=S.date,meal=S.itemMeal;
+S.nmode="piece";
+function syncNmode(){const m=S.nmode;
+  $("nmode").querySelectorAll("[data-nm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.nm===m)));
+  $("nkcal").placeholder=m==="piece"?"kcal":m==="g"?"kcal/100 g":"kcal/100 ml";$("nkcal").setAttribute("aria-label",$("nkcal").placeholder);
+  $("namt").hidden=m==="piece";$("namt").placeholder=m==="g"?"g":"dl";$("namt").setAttribute("aria-label",m==="g"?"Grams":"dl");
+  const per=Number($("nkcal").value),amt=Number($("namt").value),res=$("nres");
+  if(m!=="piece"&&per>0&&amt>0){const k=Math.round(m==="g"?amt*per/100:amt*per);
+    res.innerHTML=`<span>${fmtN(amt)} ${m} × ${fmtN(per)} / ${m==="g"?"100 g":"dl"}</span><b>= ${n(k)} kcal</b>`;res.hidden=false}else res.hidden=true}
+$("nmode").addEventListener("click",e=>{const b=e.target.closest("[data-nm]");if(!b)return;S.nmode=b.dataset.nm;syncNmode()});
+$("nkcal").addEventListener("input",syncNmode);$("namt").addEventListener("input",syncNmode);
+function newEntry(save){const name=$("nname").value.trim(),raw=$("nkcal").value,num=Number(raw),m=S.nmode,amt=Number($("namt").value);
+  if(!name||raw===""||!(num>=0)){toast(m==="piece"?"Add a name and a kcal number":"Add a name and the label's kcal");return}
+  if(m!=="piece"&&!(amt>0)){toast(m==="g"?"Add how many grams":"Add how many dl");return}
+  const date=S.date,meal=S.itemMeal,unitK=m==="piece"?num:(m==="g"?num/100:num),q=m==="piece"?1:roundAmt(amt,m),u=m==="piece"?"":m;
   write(async()=>{let id=null;
-    if(save){const hitI=S.items.find(i=>sfold(i.name)===sfold(name));if(hitI)id=hitI.id;else{S.forceItems=true;const ref=await S.db.collection("items").add({name,kcal});id=ref&&ref.id||null}}
-    await addOrMerge(name,id,kcal,1,date,meal)},save?`Saved and added to ${meal.toLowerCase()}`:`Added to ${meal.toLowerCase()}`).then(()=>{S.q="";$("srch").value="";$("nkcal").value="";S.nameAuto=true;renderPick();syncNew()})}
+    if(save){const hitI=S.items.find(i=>sfold(i.name)===sfold(name));if(hitI)id=hitI.id;else{S.forceItems=true;
+      const doc=m==="piece"?{name,kcal:num}:{name,mode:m,per100:num,usual:q,kcal:Math.round(q*unitK)};
+      const ref=await S.db.collection("items").add(doc);id=ref&&ref.id||null}}
+    await addOrMerge(name,id,unitK,q,date,meal,u)},save?`Saved and added to ${meal.toLowerCase()}`:`Added to ${meal.toLowerCase()}`).then(()=>{S.q="";$("srch").value="";$("nkcal").value="";$("namt").value="";S.nameAuto=true;renderPick();syncNew();syncNmode()})}
 $("nonce").addEventListener("click",()=>newEntry(false));
 $("nsave").addEventListener("click",()=>newEntry(true));
 $("pickclear").addEventListener("click",()=>{S.pick={};renderPick()});
 $("itemadd").addEventListener("click",()=>{const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0);if(!ids.length)return;
   const picks=ids.map(id=>({it:S.items.find(i=>i.id===id),q:S.pick[id]})).filter(x=>x.it);
   const meal=S.itemMeal,date=S.date,btn=$("itemadd");btn.disabled=true;
-  write(async()=>{for(const {it,q} of picks)await addOrMerge(it.name,it.id,Number(it.kcal)||0,q,date,meal)},`Added ${picks.length} item${picks.length===1?"":"s"} to ${meal.toLowerCase()}`).then(()=>{S.pick={};renderPick()})});
-$("iedit").addEventListener("change",e=>{const r=e.target.closest("[data-iid]");if(!r)return;
-  const name=r.querySelector('[data-f="name"]').value.trim(),kcal=Number(r.querySelector('[data-f="kcal"]').value)||0;if(!name)return;
-  write(()=>S.db.doc("items/"+r.dataset.iid).set({name,kcal}),"Saved")});
+  write(async()=>{for(const {it,q} of picks)await addOrMerge(it.name,it.id,perUnit(it),q,date,meal,isW(it)?it.mode:"")},`Added ${picks.length} item${picks.length===1?"":"s"} to ${meal.toLowerCase()}`).then(()=>{S.pick={};renderPick()})});
+$("iedit").addEventListener("change",e=>{const c=e.target.closest(".ic");if(!c)return;
+  if(e.target.matches('[data-f="mode"]')){const was=c.dataset.mode,m=e.target.value,inp=c.querySelector('[data-f="num"]');
+    if(was==="piece"&&m!=="piece")inp.value="";else if(was!=="piece"&&m==="piece")inp.value="";syncItemCard(c);if(inp.value==="")inp.focus()}
+  if(!c.dataset.iid)return;const doc=readItemCard(c);if(!doc)return;
+  write(()=>S.db.doc("items/"+c.dataset.iid).set(doc),"Saved")});
 $("iedit").addEventListener("click",e=>{
-  if(e.target.matches("[data-iadd]")){const r=$("newitem");const name=r.querySelector('[data-f="name"]').value.trim(),kcal=Number(r.querySelector('[data-f="kcal"]').value);
-    if(!name||!(kcal>=0)){toast("Add a name and a kcal number");return}S.forceItems=true;write(()=>S.db.collection("items").add({name,kcal}),"Item saved");return}
+  if(e.target.matches("[data-iadd]")){const doc=readItemCard($("newitem"));
+    if(!doc){toast("Add a name and a kcal number");return}S.forceItems=true;write(()=>S.db.collection("items").add(doc),"Item saved");return}
   if(e.target.matches("[data-idel]")){const b=e.target,r=b.closest("[data-iid]");if(b.dataset.sure){S.forceItems=true;write(()=>S.db.doc("items/"+r.dataset.iid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}
 });
 $("entries").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.meal"))return;if(d.open)delete S.mealClosed[d.dataset.meal];else S.mealClosed[d.dataset.meal]=1;try{localStorage.setItem("kd-mealclosed",JSON.stringify(S.mealClosed))}catch(_){}},true);
 $("entries").addEventListener("keydown",e=>{if(e.target.matches(".kin")&&e.key==="Enter"){e.preventDefault();e.target.blur();S.editId=null;render()}});
-function setQty(id,q){const e=S.entries.find(x=>x.id===id);if(!e)return;const {q:q0,name}=splitQty(e.food);
-  q=Math.round(q*2)/2;
+function setQty(id,q){const e=S.entries.find(x=>x.id===id);if(!e)return;const {q:q0,unit:u,name}=splitQty(e.food);
+  q=roundAmt(q,u);
   if(!(q>0)){if(confirm(`Remove ${name} from today?`)){S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else render();return}
   if(q===q0){render();return}
-  const unit=(Number(e.kcal)||0)/q0;write(()=>S.db.doc("entries/"+id).update({food:q===1?name:`${q} × ${name}`,kcal:Math.round(unit*q)}))}
+  const unit=(Number(e.kcal)||0)/q0;write(()=>S.db.doc("entries/"+id).update({food:fmtFood(q,u,name),kcal:Math.round(unit*q)}))}
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".qin");if(!i)return;const v=Number(i.value);setQty(i.dataset.qin,isFinite(v)?v:splitQty((S.entries.find(x=>x.id===i.dataset.qin)||{}).food).q)});
 $("entries").addEventListener("click",e=>{
-  const qm=e.target.closest("[data-qm],[data-qp]");if(qm){const id=qm.dataset.qm||qm.dataset.qp,en=S.entries.find(x=>x.id===id);if(en)setQty(id,splitQty(en.food).q+(qm.dataset.qm?-1:1));return}
+  const qm=e.target.closest("[data-qm],[data-qp]");if(qm){const id=qm.dataset.qm||qm.dataset.qp,en=S.entries.find(x=>x.id===id);if(en){const sq=splitQty(en.food);setQty(id,sq.q+(qm.dataset.qm?-1:1)*stepOf(sq.unit))}return}
   const m=e.target.closest("[data-more]");if(m){const id=m.dataset.more;S.openMenu=S.openMenu===id?null:id;S.confirmDel=null;S.editId=null;render();return}
   const ed=e.target.closest("[data-edit]");if(ed){S.editId=ed.dataset.edit;S.openMenu=null;render();const inp=$("entries").querySelector(".kin");if(inp){inp.focus();inp.select()}return}
   const dn=e.target.closest("[data-done]");if(dn){S.editId=null;render();return}
   const s=e.target.closest("[data-star]");if(s){const en=S.entries.find(x=>x.id===s.dataset.star);if(!en)return;
-    const {q:sq,name:sn}=splitQty(en.food),ex=S.items.find(i=>norm(i.name)===norm(sn));S.openMenu=null;if(ex){toast("Already a regular item");render();return}
-    S.forceItems=true;write(()=>S.db.collection("items").add({name:sn,kcal:Math.round((Number(en.kcal)||0)/sq)}),"Saved as regular item");render();return}
+    const {q:sq,name:sn}=splitQty(en.food),ex=S.items.find(i=>norm(i.name)===norm(sn)||norm(i.name)===norm(en.food));S.openMenu=null;if(ex){toast("Already a regular item");render();return}
+    const su=splitQty(en.food).unit,k=Number(en.kcal)||0;
+    const doc=su?{name:sn,mode:su,per100:Math.round((su==="g"?k/sq*100:k/sq)*10)/10,usual:sq,kcal:k}:{name:sn,kcal:Math.round(k/sq)};
+    S.forceItems=true;write(()=>S.db.collection("items").add(doc),"Saved as regular item");render();return}
   const b=e.target.closest("[data-del]");if(!b)return;const id=b.dataset.del;
   if(S.confirmDel===id){S.confirmDel=null;S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else{S.confirmDel=id;render();setTimeout(()=>{if(S.confirmDel===id){S.confirmDel=null;render()}},3000)}});
 document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(".menu,.more"))return;S.openMenu=null;S.confirmDel=null;render()});
@@ -597,7 +683,7 @@ $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]
   box.hidden=false});
 $("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-sugi],[data-sugnew]");if(!b)return;
   const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),anchor=pad;let row;
-  if(b.matches("[data-sugi]")){const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;row=presetRow(it.name,Number(it.kcal)||0)}
+  if(b.matches("[data-sugi]")){const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;row=isW(it)?presetRow(fmtFood(usualOf(it),it.mode,it.name),Math.round(usualOf(it)*perUnit(it))):presetRow(it.name,Number(it.kcal)||0)}
   else row=presetRow(inp.value.trim(),null);
   anchor.before(row);inp.value="";const box=pad.querySelector("[data-psug]");box.hidden=true;box.innerHTML="";
   if(b.matches("[data-sugnew]"))row.querySelector('[data-f="kcal"]').focus();
