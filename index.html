@@ -22,7 +22,7 @@
 /* Layout: one narrow column like a nutrition label — day panel, quick add, entries, history, settings */
 :root{
   --bg:#f8f3ff; --paper:#ffffff; --ink:#2a1650; --ink-soft:#5c4a85; --line:#e2d4f7;
-  --accent:#7a2ff2; --accent-soft:#efe2ff; --over:#f05a0a; --over-soft:#ffe4d1; --ok:#12a243; --ok-soft:#d6f7e0;
+  --accent:#7a2ff2; --accent-soft:#efe2ff; --over:#f05a0a;--burn:#c0262d; --over-soft:#ffe4d1; --ok:#12a243; --ok-soft:#d6f7e0;
   --hi:#ffcc00; --hi-soft:#fff2b8; --on-hi:#2a1650;
   --muted:#8a7fa0;
   --f-display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
@@ -30,12 +30,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
-  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
+  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d;--burn:#e0434a; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
   --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
   --muted:#9488a8; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
-  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
+  --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d;--burn:#e0434a; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
   --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
   --muted:#9488a8; color-scheme:dark}
 *{box-sizing:border-box}
@@ -78,11 +78,13 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .big .v{font-family:var(--f-display);font-size:46px;font-weight:700;line-height:1}
 .big .u{font-weight:600;color:var(--ink-soft)}
 .pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-left:auto}
-.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.over{background:var(--over-soft);color:var(--over)} .pill.under{background:var(--accent-soft);color:var(--accent)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.over{background:var(--over-soft);color:var(--over)} .pill.under{background:var(--accent-soft);color:var(--accent)} .pill.burn{background:var(--burn);color:#fff}
 .meter{position:relative;height:14px;background:var(--accent-soft);border-radius:4px;margin:14px 0 6px;overflow:hidden}
 .meter .band{position:absolute;top:0;bottom:0;background:var(--ok-soft);border-left:2px solid var(--ok);border-right:2px solid var(--ok)}
 .meter .fill{position:absolute;top:3px;bottom:3px;left:0;background:var(--accent);border-radius:3px}
-.meter .fill.over{background:var(--over)}
+.meter .fill.over{background:var(--over)} .meter .fill.burn{background:var(--burn)}
+.meter .bmark{position:absolute;top:0;bottom:0;width:2px;background:var(--burn)}
+.row .k.burn,.row .v.burn{color:var(--burn);font-weight:700}
 .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 .rows{margin-top:0}
 .daylog{margin-top:12px;border-top:1px solid var(--line)}
@@ -411,14 +413,16 @@ function render(){
   $("total").textContent=S.loaded?n(tot):"–";
   const max=Math.max(3000,tot*1.05);
   $("band").style.left=(targetLow/max*100)+"%";$("band").style.width=((targetHigh-targetLow)/max*100)+"%";
-  const fill=$("fill");fill.style.width=Math.min(100,tot/max*100)+"%";fill.classList.toggle("over",tot>targetHigh);
+  const fill=$("fill");fill.style.width=Math.min(100,tot/max*100)+"%";fill.classList.toggle("over",tot>targetHigh);fill.classList.toggle("burn",tot>burn);
+  let bm=$("bmark");if(!bm){bm=document.createElement("div");bm.id="bmark";bm.className="bmark";bm.title="Daily burn";$("band").parentNode.appendChild(bm)}bm.style.left=(burn/max*100)+"%";
   const pill=$("pill");
   if(S.loaded&&list.length){pill.hidden=false;
-    if(tot>targetHigh){pill.className="pill over";pill.textContent=`${n(tot-targetHigh)} over`}
-    else if(tot>=targetLow){pill.className="pill ok";pill.textContent="In range"}
-    else{pill.className="pill under";pill.textContent=`${n(targetHigh-tot)} left`}
+    if(tot>burn){pill.className="pill burn";pill.textContent=`${n(tot-targetHigh)} over · ${n(tot-burn)} above burn`}
+    else if(tot>targetHigh){pill.className="pill over";pill.textContent=`${n(tot-targetHigh)} over`}
+    else if(tot>=targetLow){pill.className="pill ok";pill.textContent=`In range · ${n(targetHigh-tot)} left`}
+    else{pill.className="pill under";pill.textContent=`${n(targetLow-tot)}–${n(targetHigh-tot)} left`}
   } else pill.hidden=true;
-  $("rows").innerHTML=`<div class="row"><span class="k">${complete?"Estimated deficit":"Estimated deficit so far"}</span><span>${n(burn-tot)} kcal</span></div>`;
+  $("rows").innerHTML=`${tot>burn?`<div class="row"><span class="k burn">${complete?"Estimated surplus":"Estimated surplus so far"}</span><span class="v burn">${n(tot-burn)} kcal</span></div>`:`<div class="row"><span class="k">${complete?"Estimated deficit":"Estimated deficit so far"}</span><span>${n(burn-tot)} kcal</span></div>`}`;
   $("complete").checked=complete;$("complete").disabled=!S.canWrite||!S.loaded;
 
   // quick add
