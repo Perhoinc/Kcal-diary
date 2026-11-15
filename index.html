@@ -132,6 +132,9 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .step span{min-width:22px;text-align:center;font-weight:700}
 .srch{width:100%;box-sizing:border-box;font-size:16px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
 .srch:focus{outline:2px solid var(--accent);outline-offset:0}
+.pblock[hidden],.ic[hidden]{display:none!important}
+.esrch{margin:2px 0 8px}
+.nomatch{font-size:13px;color:var(--muted);padding:6px 2px}
 .mrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--accent-soft)}
 .mrow .tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin-right:6px}
 .mrow .pk{font-size:13px;color:var(--ink-soft);white-space:nowrap}
@@ -317,6 +320,9 @@ summary{cursor:pointer;font-weight:600}
   <details class="qa today-only" id="qa-meals" open>
     <summary><h2>Regular meals</h2></summary>
     <div class="qa-body">
+    <div class="itemsbar"><span style="font-size:13px;color:var(--ink-soft)">Add to</span>
+      <div class="seg" id="mealmeal" role="group" aria-label="Meal for regular meals"></div></div>
+    <input class="srch" id="msrch" type="search" placeholder="Search regular meals" aria-label="Search regular meals" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="quick" id="quick"><div class="empty">Your regular meals appear here once the log has loaded.</div></div>
     </div>
   </details>
@@ -345,11 +351,13 @@ summary{cursor:pointer;font-weight:600}
 
   <details id="presetbox" class="edit-only">
     <summary>Edit regular meals</summary>
+    <input class="srch esrch" id="psrch2" type="search" placeholder="Search regular meals" aria-label="Search regular meals to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="pedit" id="pedit"></div>
   </details>
 
   <details id="itembox" class="edit-only">
     <summary>Edit regular items</summary>
+    <input class="srch esrch" id="isrch" type="search" placeholder="Search regular items" aria-label="Search regular items to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="iedit" id="iedit"></div>
   </details>
 
@@ -377,7 +385,7 @@ summary{cursor:pointer;font-weight:600}
 
 <script>
 const MEALS=["Breakfast","Lunch","Dinner","Snack"];
-const S={pick:{},q:"",entries:[],weights:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),settings:{burn:2700,targetLow:2100,targetHigh:2300,goalKg:79},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
+const S={pick:{},q:"",entries:[],weights:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),mq:"",pq:"",iq:"",settings:{burn:2700,targetLow:2100,targetHigh:2300,goalKg:79},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
 const $=id=>document.getElementById(id);
 function defaultMeal(){const h=new Date().getHours()+new Date().getMinutes()/60;return h<10.5?"Breakfast":h<15?"Lunch":h<20.5?"Dinner":"Snack"}
 const norm=s=>String(s||"").trim().toLowerCase();
@@ -417,13 +425,18 @@ function render(){
   const q=$("quick");
   if(S.loaded){
     if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`;
-    else q.innerHTML=S.presets.map(p=>{const its=(p.items||[]).filter(i=>i.food),k=its.reduce((a,i)=>a+(Number(i.kcal)||0),0),done=list.some(e=>e.preset===p.id);
-      if(!its.length)return "";const open=S.qopen&&S.qopen[p.id];
-      return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${esc(p.meal)} · ${n(k)} kcal</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}</div>`}).join("");
+    else{const toks=sfold(S.mq).split(" ").filter(Boolean),searching=toks.length>0;
+      const html=S.presets.map(p=>{const its=(p.items||[]).filter(i=>i.food);if(!its.length)return "";
+        const byName=!searching||hit(p.name,toks);if(!byName&&!its.some(i=>hit(i.food,toks)))return "";
+        const k=its.reduce((a,i)=>a+(Number(i.kcal)||0),0),done=list.some(e=>e.preset===p.id);
+        const open=S.qopen&&S.qopen[p.id]!==undefined?S.qopen[p.id]:!byName;
+        return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${n(k)} kcal</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}</div>`}).join("");
+      q.innerHTML=html||(searching?`<div class="empty">No regular meal matches “${esc(S.mq.trim())}”.</div>`:`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`)}
   }
 
   // single items
-  $("itemmeal").innerHTML=MEALS.map(m=>`<button type="button" data-im="${m}" aria-pressed="${m===S.itemMeal}">${m}</button>`).join("");
+  const segHtml=MEALS.map(m=>`<button type="button" data-im="${m}" aria-pressed="${m===S.itemMeal}">${m}</button>`).join("");
+  $("itemmeal").innerHTML=segHtml;$("mealmeal").innerHTML=segHtml;
   if(S.loaded){
     renderPick();syncNew();
   }
@@ -478,11 +491,21 @@ function renderHistory(){
 function renderPresets(){
   const box=$("pedit");
   box.innerHTML=S.presets.map(p=>`<div class="pblock" data-pid="${esc(p.id)}">
-    <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"><select data-f="meal" aria-label="Meal">${MEALS.map(m=>`<option${m===p.meal?" selected":""}>${m}</option>`).join("")}</select></div>
+    <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"></div>
     ${(p.items||[]).map((it,i)=>`<div class="pi"><input value="${esc(it.food)}" data-i="${i}" data-f="food" aria-label="Item"><input type="number" class="num" value="${Number(it.kcal)||0}" data-i="${i}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm="${i}" type="button">✕</button></div>`).join("")}
     <div class="padd"><input class="srch" type="search" data-psrch placeholder="Search items to add to this meal" aria-label="Search regular items to add to this meal" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="psug" data-psug hidden></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Blank row</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
-  </div>`).join("")+`<button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
+  </div>`).join("")+`<div class="nomatch" id="pnone" hidden></div><button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
+  filterPresets();
+  if(S.focusPid){const b=box.querySelector(`.pblock[data-pid="${S.focusPid}"]`);S.focusPid=null;if(b){b.scrollIntoView({block:"center"});const i=b.querySelector('[data-f="name"]');if(i){i.focus();i.select()}}}
+}
+// Search in Edit regular meals: matches the name or any item, as currently typed in the fields. Hides blocks only, so unsaved edits stay.
+function filterPresets(){
+  const toks=sfold(S.pq).split(" ").filter(Boolean);let shown=0;
+  $("pedit").querySelectorAll(".pblock").forEach(b=>{
+    const txt=[...b.querySelectorAll('[data-f="name"],[data-f="food"]')].map(i=>i.value).join(" ");
+    const ok=!toks.length||hit(txt,toks);b.hidden=!ok;if(ok)shown++});
+  const none=$("pnone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular meal matches “${S.pq.trim()}”.`}
 }
 const sfold=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const hit=(name,toks)=>{const h=sfold(name);return toks.every(t=>h.includes(t))};
@@ -510,10 +533,10 @@ async function addOrMerge(name,itemId,unit,q,date,meal,u=""){
   await c.add(row)}
 // A regular meal already logged today needs a confirmation before it is added a second time.
 function okAgain(p){return !S.entries.some(e=>e.date===S.date&&e.preset===p.id)||confirm(`${p.name} is already logged today. Add it again?`)}
-async function addMealItems(p){for(const it of p.items||[]){const {q,unit:u,name}=splitQty(it.food),k=Number(it.kcal)||0;
-  const ex=S.entries.find(e=>{if(e.date!==S.date||e.meal!==p.meal)return false;const sq=splitQty(e.food);return sq.unit===u&&sfold(sq.name)===sfold(name)});
-  if(ex)await addOrMerge(name,null,k/q,q,S.date,p.meal,u);
-  else await S.db.collection("entries").add({date:S.date,meal:p.meal,food:it.food,kcal:k,preset:p.id,createdAt:now()})}}
+async function addMealItems(p,meal=S.itemMeal){for(const it of p.items||[]){const {q,unit:u,name}=splitQty(it.food),k=Number(it.kcal)||0;
+  const ex=S.entries.find(e=>{if(e.date!==S.date||e.meal!==meal)return false;const sq=splitQty(e.food);return sq.unit===u&&sfold(sq.name)===sfold(name)});
+  if(ex)await addOrMerge(name,null,k/q,q,S.date,meal,u);
+  else await S.db.collection("entries").add({date:S.date,meal:meal,food:it.food,kcal:k,preset:p.id,createdAt:now()})}}
 const pickKcal=(it,q)=>q*perUnit(it);
 function pickSum(){
   const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0&&S.items.some(i=>i.id===id));
@@ -558,8 +581,17 @@ function itemCard(it,isNew){const m=isW(it)?it.mode:(it&&(it.mode==="g"||it.mode
       <label><span data-lab>${lab}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${val}" data-f="num"></label>
       <label class="usual"><span data-ul>${ul}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${us}" data-f="usual"></label></div></div>`}
 function renderItems(){
-  $("iedit").innerHTML=S.items.map(it=>itemCard(it,false)).join("")+itemCard(null,true)+
+  $("iedit").innerHTML=S.items.map(it=>itemCard(it,false)).join("")+`<div class="nomatch" id="inone" hidden></div>`+itemCard(null,true)+
     `<div style="font-size:12px;color:var(--muted)">Changes save when you leave a field. For per 100 g and per dl items, type the number from the label (per dl uses the label's per 100 ml). Switching how an item is counted only affects what you log from now on.</div>`;
+  filterItems();
+}
+// Search in Edit regular items: hides non-matching cards (the new-item card always stays). With no match, the typed text pre-fills the new item's name.
+function filterItems(){
+  const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0;
+  $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks);c.hidden=!ok;if(ok)shown++});
+  const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”. Add it below.`}
+  const nn=$("newitem")&&$("newitem").querySelector('[data-f="name"]');
+  if(nn&&S.iAuto!==false){const want=toks.length&&shown===0?q:"";if(nn.value===(S.iAutoVal||"")||nn.value==="")nn.value=want;S.iAutoVal=want}
 }
 function readItemCard(c){const name=c.querySelector('[data-f="name"]').value.trim(),m=c.querySelector('[data-f="mode"]').value,num=Number(c.querySelector('[data-f="num"]').value),us=Number(c.querySelector('[data-f="usual"]').value);
   if(!name)return null;
@@ -571,7 +603,7 @@ function syncItemCard(c){const m=c.querySelector('[data-f="mode"]').value;c.data
 function readPreset(block){
   const p=S.presets.find(x=>x.id===block.dataset.pid);const items=[];
   block.querySelectorAll(".pi").forEach(r=>{const f=r.querySelector('[data-f="food"]').value.trim();const k=Number(r.querySelector('[data-f="kcal"]').value)||0;if(f)items.push({food:f,kcal:k})});
-  return {...p,name:block.querySelector('[data-f="name"]').value.trim()||p.name,meal:block.querySelector('[data-f="meal"]').value,items};
+  return {...p,name:block.querySelector('[data-f="name"]').value.trim()||p.name,items};
 }
 
 async function write(fn,okMsg){
@@ -593,12 +625,14 @@ function route(){const v=["#history","#weight","#edit"].includes(location.hash)?
   window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
-$("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]");if(inf){S.qopen=S.qopen||{};S.qopen[inf.dataset.qinfo]=!S.qopen[inf.dataset.qinfo];render();return}
+$("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]");if(inf){S.qopen=S.qopen||{};S.qopen[inf.dataset.qinfo]=inf.getAttribute("aria-expanded")!=="true";render();return}
   const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
   if(!okAgain(p))return;
-  write(()=>addMealItems(p),`Added ${p.name}`)});
+  const meal=S.itemMeal;S.mq="";$("msrch").value="";
+  write(()=>addMealItems(p,meal),`Added ${p.name} to ${meal.toLowerCase()}`).then(()=>render())});
+$("msrch").addEventListener("input",e=>{S.mq=e.target.value;render()});
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
-$("itemmeal").addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}});
+["itemmeal","mealmeal"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}}));
 $("picklist").addEventListener("click",e=>{const r=e.target.closest("[data-pid]");if(!r)return;const id=r.dataset.pid,q=S.pick[id]||0,it=S.items.find(i=>i.id===id);if(!it)return;
   const w=isW(it),st=w?stepOf(it.mode):1,start=w?usualOf(it):1;
   if(e.target.closest("[data-pp]"))S.pick[id]=q?roundAmt(q+st,w?it.mode:""):start;
@@ -614,7 +648,7 @@ $("picklist").addEventListener("keydown",e=>{if(e.target.matches("[data-pin]")&&
 $("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;renderPick();syncNew()});
 $("nname").addEventListener("input",()=>{S.nameAuto=false});
 $("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;if(!okAgain(p))return;
-  b.disabled=true;write(()=>addMealItems(p),`Added ${p.name}`).then(()=>renderPick())});
+  const meal=S.itemMeal;b.disabled=true;write(()=>addMealItems(p,meal),`Added ${p.name} to ${meal.toLowerCase()}`).then(()=>renderPick())});
 S.nmode="piece";
 function syncNmode(){const m=S.nmode;
   $("nmode").querySelectorAll("[data-nm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.nm===m)));
@@ -646,9 +680,12 @@ $("iedit").addEventListener("change",e=>{const c=e.target.closest(".ic");if(!c)r
     if(was==="piece"&&m!=="piece")inp.value="";else if(was!=="piece"&&m==="piece")inp.value="";syncItemCard(c);if(inp.value==="")inp.focus()}
   if(!c.dataset.iid)return;const doc=readItemCard(c);if(!doc)return;
   write(()=>S.db.doc("items/"+c.dataset.iid).set(doc),"Saved")});
+$("isrch").addEventListener("input",e=>{S.iq=e.target.value;S.iAuto=true;filterItems()});
+$("iedit").addEventListener("input",e=>{if(e.target.closest("#newitem")&&e.target.matches('[data-f="name"]'))S.iAuto=e.target.value===(S.iAutoVal||"")});
+$("psrch2").addEventListener("input",e=>{S.pq=e.target.value;filterPresets()});
 $("iedit").addEventListener("click",e=>{
   if(e.target.matches("[data-iadd]")){const doc=readItemCard($("newitem"));
-    if(!doc){toast("Add a name and a kcal number");return}S.forceItems=true;write(()=>S.db.collection("items").add(doc),"Item saved");return}
+    if(!doc){toast("Add a name and a kcal number");return}S.forceItems=true;S.iq="";$("isrch").value="";S.iAuto=true;S.iAutoVal="";write(()=>S.db.collection("items").add(doc),"Item saved");return}
   if(e.target.matches("[data-idel]")){const b=e.target,r=b.closest("[data-iid]");if(b.dataset.sure){S.forceItems=true;write(()=>S.db.doc("items/"+r.dataset.iid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}
 });
 $("entries").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.meal"))return;if(d.open)delete S.mealClosed[d.dataset.meal];else S.mealClosed[d.dataset.meal]=1;try{localStorage.setItem("kd-mealclosed",JSON.stringify(S.mealClosed))}catch(_){}},true);
@@ -690,9 +727,10 @@ $("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-sugi],[d
   toast("Added to the meal. Tap Save to keep it")});
 $("pedit").addEventListener("click",e=>{
   if(e.target.id==="newpreset"){if(S.creating)return;S.creating=true;e.target.disabled=true;const id="p"+Date.now().toString(36);S.forcePresets=true;
-    write(()=>S.db.doc("presets/"+id).set({name:"New meal",meal:"Snack",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added below. Fill it in and tap Save").finally(()=>{S.creating=false});return}
+    S.pq="";$("psrch2").value="";S.focusPid=id;
+    write(()=>S.db.doc("presets/"+id).set({name:"New meal",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added. Name it, fill it in and tap Save").finally(()=>{S.creating=false});return}
   const block=e.target.closest(".pblock");if(!block)return;const id=block.dataset.pid;
-  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,meal:p.meal,items:p.items,order:p.order||0}),"Saved")}
+  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,...(p.meal?{meal:p.meal}:{}),items:p.items,order:p.order||0}),"Saved")}
   else if(e.target.matches("[data-additem]")){e.target.parentElement.previousElementSibling.before(presetRow("",null))}
   else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove()}
   else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
@@ -767,7 +805,7 @@ function startLog(db){
   db.collection("entries").onSnapshot(s=>{S.entries=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded=true;render()},onErr);
   db.collection("weights").onSnapshot(s=>{S.weights=s.docs.map(d=>({id:d.id,...d.data()})).filter(w=>w.date&&Number(w.kg)>0).sort((a,b)=>a.date<b.date?-1:1);renderWeight()},onErr);
   db.collection("days").onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.days=o;render()},onErr);
-  db.collection("presets").onSnapshot(s=>{S.presets=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+  db.collection("presets").onSnapshot(s=>{S.presets=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sfold(a.name).localeCompare(sfold(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
     if(!typing||S.forcePresets){S.forcePresets=false;renderPresets()}render()},onErr);
   db.collection("items").onSnapshot(s=>{S.items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.name).localeCompare(norm(b.name),"sv"));
