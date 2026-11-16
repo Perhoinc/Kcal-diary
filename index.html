@@ -106,7 +106,7 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .qcard .qbtn span{white-space:nowrap;font-size:12px}
 .qcard .qbtn .qi{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
 .qinfo{position:absolute;top:50%;transform:translateY(-50%);right:5px;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--accent);font-size:17px;font-weight:700;line-height:1;padding:0}
-.qcard:has(.qdetail) .qinfo{top:19px;transform:translateY(-50%)}
+.qcard:has(.qdetail) .qinfo,.qcard:has(.qdish) .qinfo{top:19px;transform:translateY(-50%)}
 .qinfo[aria-expanded=true]{background:var(--accent-soft)}
 .qdetail{margin-top:6px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
 .qdetail .qd{display:flex;justify-content:space-between;gap:10px;padding:4px 0}
@@ -267,6 +267,38 @@ summary{cursor:pointer;font-weight:600}
 .pblock{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
 .pblock .pi{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
 .pblock .ph{display:flex;gap:8px;align-items:center;font-weight:700}
+.pedit input,.pedit select,.potedit input,.potedit select{font-size:16px}
+.pblock .pi.amt{grid-template-columns:minmax(0,1fr) 72px auto;align-items:center}
+.pblock .pi.amt>[data-f=food]{grid-column:1/3}
+.pblock .pi.amt .pk{grid-column:2/4;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft)}
+.pblock .pi.amt .pk input{width:72px;color:var(--ink)}
+.pblock .pi.amt .step{justify-self:start}
+.pblock .ptot{font-size:13px;color:var(--ink-soft)}
+.pblock .pdd{border:0;padding:0;background:none}
+.pblock .pdd summary{font-size:13px;font-weight:600;color:var(--ink-soft)}
+.pdish{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.pdish label,.pnew label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-soft);min-width:0}
+.pf{display:flex;align-items:center;gap:6px}
+.pf input{flex:1;min-width:0;width:0}
+.pf em{font-style:normal;font-size:13px;color:var(--ink-soft)}
+.pdish .ppot{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.pdish .ppot input{width:100%;box-sizing:border-box}
+.pdish select,.qdish select{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 6px;min-width:0}
+.pdish .pres{grid-column:1/-1;font-size:12px;color:var(--ink-soft)}
+.pnew{margin-top:6px}
+.potedit{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.potedit .hint{font-size:12px;color:var(--ink-soft)}
+.potrow{display:grid;grid-template-columns:minmax(0,1fr) 112px auto;gap:6px;align-items:center}
+.potrow input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;min-width:0}
+.qdish{margin-top:6px;border:1.5px solid var(--accent);border-radius:10px;padding:10px;background:var(--paper);display:flex;flex-direction:column;gap:8px}
+.qdish .qdh{font-size:13px;color:var(--ink-soft)}
+.qdish .seg{align-self:flex-start}
+.qdish .qdrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.qdish label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-soft);min-width:0;flex:1}
+.qdish input.gin{font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);min-width:0;width:100%;box-sizing:border-box}
+.qdish select{font-size:16px;padding:9px 6px}
+.qdish .na{display:flex;gap:8px}
+.qdish .na .primary{flex:1}
 .updatebar{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:30;max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--hi);color:var(--on-hi);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .updatebar button{border:0;background:var(--on-hi);color:var(--hi);border-radius:8px;padding:6px 12px;font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:14px;z-index:20}
@@ -357,6 +389,11 @@ summary{cursor:pointer;font-weight:600}
     <div class="pedit" id="pedit"></div>
   </details>
 
+  <details id="potbox" class="edit-only">
+    <summary>Pots &amp; containers</summary>
+    <div class="potedit" id="potedit"></div>
+  </details>
+
   <details id="itembox" class="edit-only">
     <summary>Edit regular items</summary>
     <input class="srch esrch" id="isrch" type="search" placeholder="Search regular items" aria-label="Search regular items to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
@@ -387,7 +424,7 @@ summary{cursor:pointer;font-weight:600}
 
 <script>
 const MEALS=["Breakfast","Lunch","Dinner","Snack"];
-const S={pick:{},q:"",entries:[],weights:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),mq:"",pq:"",iq:"",settings:{burn:2700,targetLow:2100,targetHigh:2300,goalKg:79},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
+const S={pick:{},q:"",entries:[],weights:[],days:{},presets:[],items:[],itemMeal:defaultMeal(),mq:"",pq:"",iq:"",pots:[],dish:null,settings:{burn:2700,targetLow:2100,targetHigh:2300,goalKg:79},date:ymd(new Date()),db:null,canWrite:true,loaded:false,confirmDel:null};
 const $=id=>document.getElementById(id);
 function defaultMeal(){const h=new Date().getHours()+new Date().getMinutes()/60;return h<10.5?"Breakfast":h<15?"Lunch":h<20.5?"Dinner":"Snack"}
 const norm=s=>String(s||"").trim().toLowerCase();
@@ -429,13 +466,15 @@ function render(){
   const q=$("quick");
   if(S.loaded){
     if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`;
-    else{const toks=sfold(S.mq).split(" ").filter(Boolean),searching=toks.length>0;
+    else{const ae=document.activeElement;
+      if(!(ae&&ae.tagName==="INPUT"&&ae.closest&&ae.closest(".qdish"))){
+      const toks=sfold(S.mq).split(" ").filter(Boolean),searching=toks.length>0;
       const html=S.presets.map(p=>{const its=(p.items||[]).filter(i=>i.food);if(!its.length)return "";
         const byName=!searching||hit(p.name,toks);if(!byName&&!its.some(i=>hit(i.food,toks)))return "";
-        const k=its.reduce((a,i)=>a+(Number(i.kcal)||0),0),done=list.some(e=>e.preset===p.id);
+        const k=totalOf(p),done=list.some(e=>e.preset===p.id),dish=isDish(p);
         const open=S.qopen&&S.qopen[p.id]!==undefined?S.qopen[p.id]:!byName;
-        return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${n(k)} kcal</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}</div>`}).join("");
-      q.innerHTML=html||(searching?`<div class="empty">No regular meal matches “${esc(S.mq.trim())}”.</div>`:`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`)}
+        return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" aria-expanded="${dish&&S.dish&&S.dish.id===p.id?"true":"false"}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}${dish&&S.dish&&S.dish.id===p.id?dishPanel(p):""}</div>`}).join("");
+      q.innerHTML=html||(searching?`<div class="empty">No regular meal matches “${esc(S.mq.trim())}”.</div>`:`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`)}}
   }
 
   // single items
@@ -453,11 +492,11 @@ function render(){
     const items=list.filter(e=>e.meal===m).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
     const sub=items.reduce((a,e)=>a+(Number(e.kcal)||0),0);
     return `<details class="meal" data-meal="${m}"${S.mealClosed[m]?"":" open"}><summary class="meal-h"><span>${m}</span><span class="num">${n(sub)} kcal</span></summary>`+
-      items.map(e=>{const id=esc(e.id),saved=S.items.some(i=>norm(i.name)===norm(splitQty(e.food).name)||norm(i.name)===norm(e.food)),open=S.openMenu===e.id,editing=S.editId===e.id;
+      items.map(e=>{const id=esc(e.id),isP=splitQty(e.food).unit==="portions",saved=S.items.some(i=>norm(i.name)===norm(splitQty(e.food).name)||norm(i.name)===norm(e.food)),open=S.openMenu===e.id,editing=S.editId===e.id;
         return `<div class="entry"><span class="food">${esc(e.food)}${e.note?`<span class="note">${esc(e.note)}</span>`:""}</span>
         ${editing?`<input class="kin" type="number" min="0" step="1" value="${Number(e.kcal)||0}" data-id="${id}" aria-label="kcal for ${esc(e.food)}"><button class="mbtn" data-done="${id}" type="button">Done</button>`
           :`<span class="kv num">${n(e.kcal)}</span>${S.canWrite?`<button class="more" data-more="${id}" type="button" aria-haspopup="menu" aria-expanded="${open}" aria-label="Options for ${esc(e.food)}">⋯</button>`:"<span></span>"}`}
-        ${open?`<div class="menu" role="menu"><span class="step" role="group" aria-label="Amount"><button type="button" data-qm="${id}" aria-label="Less">−</button><input class="qin" type="number" inputmode="decimal" min="0" step="any" value="${splitQty(e.food).q}" data-qin="${id}" aria-label="Amount"><span class="u">${splitQty(e.food).unit}</span><button type="button" data-qp="${id}" aria-label="More">+</button></span><button role="menuitem" type="button" class="icon" data-edit="${id}" title="Edit kcal" aria-label="Edit kcal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14.5 5.5l3 3"/></svg></button><button role="menuitem" type="button" class="icon star${saved?" on":""}" data-star="${id}" ${saved?"disabled":""} title="${saved?"Saved as regular item":"Save as regular item"}" aria-label="${saved?"Saved as regular item":"Save as regular item"}">${saved?"★":"☆"}</button></div>`:""}
+        ${open?`<div class="menu" role="menu"><span class="step" role="group" aria-label="Amount"><button type="button" data-qm="${id}" aria-label="Less">−</button><input class="qin" type="number" inputmode="decimal" min="0" step="any" value="${splitQty(e.food).q}" data-qin="${id}" aria-label="Amount"><span class="u">${splitQty(e.food).unit}</span><button type="button" data-qp="${id}" aria-label="More">+</button></span><button role="menuitem" type="button" class="icon" data-edit="${id}" title="Edit kcal" aria-label="Edit kcal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="M14.5 5.5l3 3"/></svg></button>${isP?"":`<button role="menuitem" type="button" class="icon star${saved?" on":""}" data-star="${id}" ${saved?"disabled":""} title="${saved?"Saved as regular item":"Save as regular item"}" aria-label="${saved?"Saved as regular item":"Save as regular item"}">${saved?"★":"☆"}</button>`}</div>`:""}
         </div>`}).join("")+`</details>`}).join("");
 
   renderHistory();
@@ -492,17 +531,69 @@ function renderHistory(){
    <div style="grid-column:1/-1;font-size:12px;color:var(--muted)">Based on ${comp.length} fully logged day${comp.length===1?"":"s"}. About 7,700 kcal is roughly 1 kg of body fat.</div>`;
 }
 
+// ---- Dish panel on Today ----
+function dishCalc(p){const d=S.dish,k=totalOf(p),por=Number(p.portions)||1,ck=Number(p.cookedG)||0;
+  if(d.mode==="g"){const sc=Number(d.reading)||0,g=Math.max(0,Math.round(sc-(sc>0?potG(d.pot):0)));return {q:g,u:"g",kcal:ck>0?k*g/ck:0,sc}}
+  const q=roundAmt(Math.max(0,Number(d.q)||0),"portions");return {q,u:"portions",kcal:k*q/por}}
+function dishRes(p){const c=dishCalc(p),pot=S.pots.find(o=>o.id===S.dish.pot),pre=c.u==="g"?(c.sc>0&&c.sc!==c.q?`${fmtN(c.sc)} g − ${pot?esc(pot.name)+" "+n(pot.g)+" g ":""}= ${fmtN(c.q)} g`:`${fmtN(c.q)} g`):`${fmtN(c.q)} ${c.q===1?"portion":"portions"}`;
+  return `<span>${pre}</span><b>= ${n(c.kcal)} kcal</b>`}
+function dishPanel(p){const d=S.dish,k=totalOf(p),por=Number(p.portions)||1,ck=Number(p.cookedG)||0,c=dishCalc(p);
+  const pots=`<option value="">None</option>`+S.pots.map(o=>`<option value="${esc(o.id)}"${o.id===d.pot?" selected":""}>${esc(o.name)}</option>`).join("");
+  return `<div class="qdish" data-dish="${esc(p.id)}">
+    <div class="qdh">${fmtN(por)} portion${por===1?"":"s"} · ${n(k/por)} kcal each${ck>0?` · ${n(ck)} g cooked`:""}</div>
+    ${ck>0?`<div class="seg" role="group" aria-label="How to log it"><button type="button" data-dm="p" aria-pressed="${d.mode!=="g"}">Portions</button><button type="button" data-dm="g" aria-pressed="${d.mode==="g"}">Grams</button></div>`:""}
+    ${d.mode==="g"?`<div class="qdrow"><label>On the scale, g<input class="gin" type="number" inputmode="decimal" min="0" step="any" data-dscale value="${esc(d.reading)}" placeholder="g"></label><label>Container<select data-dpot aria-label="Container">${pots}</select></label></div>`
+      :`<div class="qdrow"><span class="step"><button type="button" data-dpm aria-label="Half a portion less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${d.q}" data-dq aria-label="Portions"><span class="u">portions</span><button type="button" data-dpp aria-label="Half a portion more">+</button></span></div>`}
+    <div class="nres" data-dres>${dishRes(p)}</div>
+    <div class="na"><button class="ghost" type="button" data-dcancel>Cancel</button><button class="primary" type="button" data-dadd ${S.canWrite?"":"disabled"}>Add to ${S.itemMeal.toLowerCase()}</button></div>
+  </div>`}
 function renderPresets(){
   const box=$("pedit");
   box.innerHTML=S.presets.map(p=>`<div class="pblock" data-pid="${esc(p.id)}">
     <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"></div>
-    ${(p.items||[]).map((it,i)=>`<div class="pi"><input value="${esc(it.food)}" data-i="${i}" data-f="food" aria-label="Item"><input type="number" class="num" value="${Number(it.kcal)||0}" data-i="${i}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm="${i}" type="button">✕</button></div>`).join("")}
+    ${(p.items||[]).map(it=>piHtml(it.food,it.kcal)).join("")}
     <div class="padd"><input class="srch" type="search" data-psrch placeholder="Search items to add to this meal" aria-label="Search regular items to add to this meal" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="psug" data-psug hidden></div></div>
+    <div class="ptot" data-ptot></div>
+    <details class="pdd"${isDish(p)?" open":""}><summary>Dish: portions and cooked weight</summary>
+      <div class="pdish">
+        <label>Makes<span class="pf"><input type="number" inputmode="decimal" min="0" step="any" data-f="portions" value="${isDish(p)?p.portions:""}" placeholder="–" aria-label="Portions"><em>portions</em></span></label>
+        <label>Cooked weight<span class="pf"><input type="number" inputmode="decimal" min="0" step="any" data-f="cookedG" value="${Number(p.cookedG)>0?p.cookedG:""}" placeholder="–" aria-label="Cooked weight in grams"><em>g</em></span></label>
+        <div class="ppot"><select data-pot aria-label="Pot used"><option value="">Weigh with a pot…</option>${S.pots.map(o=>`<option value="${esc(o.id)}">${esc(o.name)} · ${n(o.g)} g</option>`).join("")}</select><input type="number" inputmode="decimal" min="0" step="any" data-scale placeholder="On the scale, g" aria-label="Scale reading in grams"></div>
+        <div class="pres" data-pres>Weigh the pot with the food in it. The pot's empty weight is subtracted.</div>
+      </div>
+    </details>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Blank row</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
   </div>`).join("")+`<div class="nomatch" id="pnone" hidden></div><button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
+  box.querySelectorAll(".pblock").forEach(updatePTot);
   filterPresets();
   if(S.focusPid){const b=box.querySelector(`.pblock[data-pid="${S.focusPid}"]`);S.focusPid=null;if(b){b.scrollIntoView({block:"center"});const i=b.querySelector('[data-f="name"]');if(i){i.focus();i.select()}}}
 }
+// An ingredient row: "50 g Kvarg" / "2 × Boiled egg" become an amount row with a stepper; anything else stays a plain text + kcal row.
+const hasAmt=f=>/^\d+(?:[.,]\d+)? ?(?:g|dl) \S/.test(f)||/^\d+(?:[.,]\d+)? × \S/.test(f);
+const presetFood=(q,u,name)=>u?`${fmtN(q)} ${u} ${name}`:`${fmtN(q)} × ${name}`;
+function piHtml(food,kcal){const k=Number(kcal)||0;food=String(food||"");
+  if(hasAmt(food)){const a=splitQty(food),pu=a.q>0?k/a.q:0;
+    return `<div class="pi amt" data-amt data-unit="${a.unit}" data-pu="${pu}"><input value="${esc(a.name)}" data-f="food" aria-label="Item"><button class="ghost" data-rm type="button">✕</button><span class="step" role="group" aria-label="Amount"><button type="button" data-rpm aria-label="Less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${a.q}" data-f="amt" aria-label="Amount"><span class="u">${a.unit||"×"}</span><button type="button" data-rpp aria-label="More">+</button></span><span class="pk"><input type="number" class="num" inputmode="decimal" min="0" step="1" value="${k}" data-f="kcal" aria-label="kcal"> kcal</span></div>`}
+  return `<div class="pi"><input value="${esc(food)}" data-f="food" aria-label="Item"><input type="number" class="num" value="${k}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm type="button">✕</button></div>`}
+function updatePTot(block){let sum=0;block.querySelectorAll('.pi [data-f="kcal"]').forEach(i=>sum+=Number(i.value)||0);
+  const por=Number(block.querySelector('[data-f="portions"]').value)||0,ck=Number(block.querySelector('[data-f="cookedG"]').value)||0;
+  block.querySelector("[data-ptot]").textContent=`Total ${n(sum)} kcal`+(por>0?` · ${n(sum/por)} per portion`:"")+(ck>0?` · ${n(sum/ck*100)} per 100 g`:"")}
+// ---- Pots and containers ----
+function renderPots(){
+  $("potedit").innerHTML=`<div class="hint">The empty weight of the pots and lunch boxes you weigh food in. Used for a dish's cooked weight and when you log by grams.</div>`+
+    S.pots.map(o=>`<div class="potrow" data-potid="${esc(o.id)}"><input value="${esc(o.name)}" data-pf="name" aria-label="Pot name"><span class="pf"><input type="number" inputmode="decimal" min="0" step="any" value="${Number(o.g)||""}" data-pf="g" aria-label="Empty weight in grams"><em>g</em></span><button class="ghost" data-potdel type="button" aria-label="Delete ${esc(o.name)}">✕</button></div>`).join("")+
+    `<div class="potrow" id="newpot"><input data-pf="name" placeholder="New pot, e.g. Lunch box" aria-label="New pot name"><span class="pf"><input type="number" inputmode="decimal" min="0" step="any" data-pf="g" placeholder="empty" aria-label="Empty weight in grams"><em>g</em></span><button class="primary" data-potadd type="button">Add</button></div>`;
+}
+$("potedit").addEventListener("change",e=>{const r=e.target.closest("[data-potid]");if(!r)return;
+  const name=r.querySelector('[data-pf="name"]').value.trim(),g=Number(r.querySelector('[data-pf="g"]').value);
+  if(!name||!(g>=0)){toast("A pot needs a name and an empty weight");return}
+  write(()=>S.db.doc("pots/"+r.dataset.potid).set({name,g:Math.round(g*10)/10}),"Saved")});
+$("potedit").addEventListener("click",e=>{
+  if(e.target.matches("[data-potadd]")){const r=$("newpot"),name=r.querySelector('[data-pf="name"]').value.trim(),g=Number(r.querySelector('[data-pf="g"]').value);
+    if(!name||!(g>0)){toast("Add a name and the empty weight in grams");return}
+    S.forcePots=true;write(()=>S.db.collection("pots").add({name,g:Math.round(g*10)/10}),"Pot saved");return}
+  if(e.target.matches("[data-potdel]")){const b=e.target,r=b.closest("[data-potid]");
+    if(b.dataset.sure){S.forcePots=true;write(()=>S.db.doc("pots/"+r.dataset.potid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}});
 // Search in Edit regular meals: matches the name or any item, as currently typed in the fields. Hides blocks only, so unsaved edits stay.
 function filterPresets(){
   const toks=sfold(S.pq).split(" ").filter(Boolean);let shown=0;
@@ -516,31 +607,38 @@ const hit=(name,toks)=>{const h=sfold(name);return toks.every(t=>h.includes(t))}
 S.mealClosed=(()=>{try{return JSON.parse(localStorage.getItem("kd-mealclosed")||"{}")||{}}catch(_){return {}}})();
 // "2 × Egg" → count 2; "50 g Kvarg" / "1,5 dl Milk" → weighed amount; anything else → 1 of it.
 const splitQty=f=>{f=String(f||"");let m=/^(\d+(?:[.,]\d+)?) ?(g|dl) (.+)$/.exec(f);if(m)return {q:parseFloat(m[1].replace(",",".")),unit:m[2],name:m[3]};
+  m=/^(\d+(?:[.,]\d+)?) portions? (.+)$/.exec(f);if(m)return {q:parseFloat(m[1].replace(",",".")),unit:"portions",name:m[2]};
   m=/^(\d+(?:[.,]\d+)?) × (.+)$/.exec(f);return m?{q:parseFloat(m[1].replace(",",".")),unit:"",name:m[2]}:{q:1,unit:"",name:f}};
 const fmtN=v=>String(Math.round(v*100)/100).replace(".",",");
-const fmtFood=(q,unit,name)=>unit?`${fmtN(q)} ${unit} ${name}`:(q===1?name:`${fmtN(q)} × ${name}`);
+const fmtFood=(q,unit,name)=>unit==="portions"?`${fmtN(q)} ${q===1?"portion":"portions"} ${name}`:unit?`${fmtN(q)} ${unit} ${name}`:(q===1?name:`${fmtN(q)} × ${name}`);
 // Items: mode "g" or "dl" means kcal comes from per100 (per 100 g, or per 100 ml = per dl); no mode = fixed kcal per piece.
 const isW=it=>it&&(it.mode==="g"||it.mode==="dl")&&Number(it.per100)>0;
 const perUnit=it=>isW(it)?(it.mode==="g"?Number(it.per100)/100:Number(it.per100)):(Number(it&&it.kcal)||0);
 const usualOf=it=>Number(it.usual)>0?Number(it.usual):(it.mode==="g"?100:1);
-const stepOf=u=>u==="g"?10:u==="dl"?0.5:1;
-const roundAmt=(v,u)=>u==="g"?Math.round(v):u==="dl"?Math.round(v*10)/10:Math.round(v*2)/2;
+const stepOf=u=>u==="g"?10:u==="dl"||u==="portions"?0.5:1;
+const roundAmt=(v,u)=>u==="g"?Math.round(v):u==="dl"?Math.round(v*10)/10:u==="portions"?Math.round(v*100)/100:Math.round(v*2)/2;
+const totalOf=p=>(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);
+const isDish=p=>Number(p&&p.portions)>0;
+const potG=id=>{const o=S.pots.find(x=>x.id===id);return o?Number(o.g)||0:0};
 // Add q units (pieces, g or dl) of an item to a meal; if the same item in the same unit is already logged there, bump that row instead.
-async function addOrMerge(name,itemId,unit,q,date,meal,u=""){
+async function addOrMerge(name,itemId,unit,q,date,meal,u="",extra={}){
   const key=sfold(name),c=S.db.collection("entries");
   // A piece item whose own name starts with an amount ("1dl oatmeal") matches its row by the full text.
   const sqOf=e=>u===""&&sfold(e.food)===key?{q:1,unit:"",name:e.food}:splitQty(e.food);
   const ex=S.entries.find(e=>{if(e.date!==date||e.meal!==meal)return false;const sq=sqOf(e);return sq.unit===u&&((itemId&&e.item===itemId)||sfold(sq.name)===key)});
   if(ex){const sq=sqOf(ex),t=roundAmt(sq.q+q,u);
     await S.db.doc("entries/"+ex.id).update({food:fmtFood(t,u,sq.name),kcal:Math.round((Number(ex.kcal)||0)+q*unit)});return}
-  const row={date,meal,food:fmtFood(q,u,name),kcal:Math.round(q*unit),createdAt:now()};if(itemId)row.item=itemId;
+  const row={date,meal,food:fmtFood(q,u,name),kcal:Math.round(q*unit),createdAt:now(),...extra};if(itemId)row.item=itemId;
   await c.add(row)}
 // A regular meal already logged today needs a confirmation before it is added a second time.
 function okAgain(p){return !S.entries.some(e=>e.date===S.date&&e.preset===p.id)||confirm(`${p.name} is already logged today. Add it again?`)}
 async function addMealItems(p,meal=S.itemMeal){for(const it of p.items||[]){const {q,unit:u,name}=splitQty(it.food),k=Number(it.kcal)||0;
   const ex=S.entries.find(e=>{if(e.date!==S.date||e.meal!==meal)return false;const sq=splitQty(e.food);return sq.unit===u&&sfold(sq.name)===sfold(name)});
   if(ex)await addOrMerge(name,null,k/q,q,S.date,meal,u);
-  else await S.db.collection("entries").add({date:S.date,meal:meal,food:it.food,kcal:k,preset:p.id,createdAt:now()})}}
+  else await S.db.collection("entries").add({date:S.date,meal:meal,food:fmtFood(q,u,name),kcal:k,preset:p.id,createdAt:now()})}}
+// A dish (a meal with portions) is logged as one row, by portions or by grams of the cooked weight.
+async function addDish(p,meal,q,u){const k=totalOf(p),per=u==="g"?k/(Number(p.cookedG)||1):k/(Number(p.portions)||1);
+  await addOrMerge(p.name,null,per,q,S.date,meal,u,{preset:p.id})}
 const pickKcal=(it,q)=>q*perUnit(it);
 function pickSum(){
   const ids=Object.keys(S.pick).filter(id=>S.pick[id]>0&&S.items.some(i=>i.id===id));
@@ -557,7 +655,7 @@ function renderPick(){
   const items=searching?S.items.filter(it=>hit(it.name,toks)):S.items;
   const meals=searching?S.presets.filter(p=>hit(p.name,toks)):[];
   const top=box.scrollTop;
-  const mrows=meals.map(p=>{const k=(p.items||[]).reduce((a,i)=>a+(Number(i.kcal)||0),0);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${n(k)} kcal</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>Add</button></div>`}).join("");
+  const mrows=meals.map(p=>{const k=totalOf(p),dish=isDish(p);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>${dish?"+ 1 portion":"Add"}</button></div>`}).join("");
   const irows=items.map(it=>{const q=S.pick[it.id]||0,id=esc(it.id),nm=esc(it.name);
     if(isW(it)){const u=it.mode,lab=u==="g"?`${n(it.per100)} kcal / 100 g`:`${n(it.per100)} kcal / dl`;
       return `<div class="prow w${q?" on":""}" data-pid="${id}"><button class="pname" type="button" data-ptog>${nm}<span class="sub">${lab}</span></button>`+
@@ -606,8 +704,10 @@ function syncItemCard(c){const m=c.querySelector('[data-f="mode"]').value;c.data
   c.querySelector("[data-lab]").textContent=m==="piece"?"kcal each":m==="g"?"kcal / 100 g":"kcal / 100 ml";c.querySelector("[data-ul]").textContent=m==="dl"?"Usual dl":"Usual g"}
 function readPreset(block){
   const p=S.presets.find(x=>x.id===block.dataset.pid);const items=[];
-  block.querySelectorAll(".pi").forEach(r=>{const f=r.querySelector('[data-f="food"]').value.trim();const k=Number(r.querySelector('[data-f="kcal"]').value)||0;if(f)items.push({food:f,kcal:k})});
-  return {...p,name:block.querySelector('[data-f="name"]').value.trim()||p.name,items};
+  block.querySelectorAll(".pi").forEach(r=>{const f=r.querySelector('[data-f="food"]').value.trim();const k=Number(r.querySelector('[data-f="kcal"]').value)||0;if(!f)return;
+    if(r.dataset.amt!==undefined){const q=Number(r.querySelector('[data-f="amt"]').value)||0;items.push({food:presetFood(q,r.dataset.unit,f),kcal:k})}else items.push({food:f,kcal:k})});
+  const por=Number(block.querySelector('[data-f="portions"]').value),ck=Number(block.querySelector('[data-f="cookedG"]').value);
+  return {...p,name:block.querySelector('[data-f="name"]').value.trim()||p.name,items,portions:por>0?por:0,cookedG:ck>0?Math.round(ck):0};
 }
 
 async function write(fn,okMsg){
@@ -630,11 +730,25 @@ function route(){const v=["#history","#weight","#edit"].includes(location.hash)?
 window.addEventListener("hashchange",route);route();
 $("complete").onchange=e=>{const v=e.target.checked;write(()=>S.db.doc("days/"+S.date).set({complete:v}),v?"Day marked complete":"Day marked partial")};
 $("quick").addEventListener("click",e=>{const inf=e.target.closest("[data-qinfo]");if(inf){S.qopen=S.qopen||{};S.qopen[inf.dataset.qinfo]=inf.getAttribute("aria-expanded")!=="true";render();return}
+  const dp=e.target.closest(".qdish");if(dp){const p=S.presets.find(x=>x.id===dp.dataset.dish);if(!p||!S.dish)return;
+    const refresh=()=>{const r=dp.querySelector("[data-dres]");if(r)r.innerHTML=dishRes(p)};
+    const dm=e.target.closest("[data-dm]");if(dm){S.dish.mode=dm.dataset.dm==="g"?"g":"p";render();return}
+    const st=e.target.closest("[data-dpm],[data-dpp]");if(st){const inp=dp.querySelector("[data-dq]"),v=Math.max(0,roundAmt((Number(inp.value)||0)+(st.matches("[data-dpm]")?-0.5:0.5),"portions"));inp.value=v;S.dish.q=v;refresh();return}
+    if(e.target.closest("[data-dcancel]")){S.dish=null;render();return}
+    if(e.target.closest("[data-dadd]")){const c=dishCalc(p);if(!(c.q>0)){toast(c.u==="g"?"Type what the scale shows":"Add at least a bit of a portion");return}
+      const meal=S.itemMeal;S.dish=null;write(()=>addDish(p,meal,c.q,c.u),`Added ${fmtFood(c.q,c.u,p.name)} to ${meal.toLowerCase()}`).then(()=>render())}
+    return}
   const b=e.target.closest("[data-preset]");if(!b)return;const p=S.presets.find(x=>x.id===b.dataset.preset);if(!p)return;
+  if(isDish(p)){if(S.dish&&S.dish.id===p.id)S.dish=null;else{let pot="";try{pot=localStorage.getItem("kd-pot")||""}catch(_){}S.dish={id:p.id,mode:"p",q:1,reading:"",pot:S.pots.some(o=>o.id===pot)?pot:""}}render();return}
   if(!okAgain(p))return;
   const meal=S.itemMeal;S.mq="";$("msrch").value="";
   write(()=>addMealItems(p,meal),`Added ${p.name} to ${meal.toLowerCase()}`).then(()=>render())});
 $("msrch").addEventListener("input",e=>{S.mq=e.target.value;render()});
+$("quick").addEventListener("input",e=>{const dp=e.target.closest(".qdish");if(!dp||!S.dish)return;const p=S.presets.find(x=>x.id===dp.dataset.dish);if(!p)return;
+  if(e.target.matches("[data-dq]"))S.dish.q=e.target.value;else if(e.target.matches("[data-dscale]"))S.dish.reading=e.target.value;else return;
+  dp.querySelector("[data-dres]").innerHTML=dishRes(p)});
+$("quick").addEventListener("change",e=>{const dp=e.target.closest(".qdish");if(!dp||!S.dish||!e.target.matches("[data-dpot]"))return;const p=S.presets.find(x=>x.id===dp.dataset.dish);if(!p)return;
+  S.dish.pot=e.target.value;try{localStorage.setItem("kd-pot",S.dish.pot)}catch(_){}dp.querySelector("[data-dres]").innerHTML=dishRes(p)});
 $("entries").addEventListener("change",e=>{const i=e.target.closest(".kin");if(!i)return;const v=Number(i.value);if(!(v>=0))return;write(()=>S.db.doc("entries/"+i.dataset.id).update({kcal:v}),"Updated")});
 ["itemmeal","mealmeal"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("[data-im]");if(b){S.itemMeal=b.dataset.im;render()}}));
 $("picklist").addEventListener("click",e=>{const r=e.target.closest("[data-pid]");if(!r)return;const id=r.dataset.pid,q=S.pick[id]||0,it=S.items.find(i=>i.id===id);if(!it)return;
@@ -651,8 +765,11 @@ $("picklist").addEventListener("change",e=>{const i=e.target.closest("[data-pin]
 $("picklist").addEventListener("keydown",e=>{if(e.target.matches("[data-pin]")&&e.key==="Enter"){e.preventDefault();e.target.blur()}});
 $("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;renderPick();syncNew()});
 $("nname").addEventListener("input",()=>{S.nameAuto=false});
-$("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;if(!okAgain(p))return;
-  const meal=S.itemMeal;b.disabled=true;write(()=>addMealItems(p,meal),`Added ${p.name} to ${meal.toLowerCase()}`).then(()=>renderPick())});
+$("picklist").addEventListener("click",e=>{const b=e.target.closest("[data-madd]");if(!b)return;const p=S.presets.find(x=>x.id===b.closest("[data-mid]").dataset.mid);if(!p)return;
+  const meal=S.itemMeal;
+  if(isDish(p)){b.disabled=true;write(()=>addDish(p,meal,1,"portions"),`Added 1 portion ${p.name} to ${meal.toLowerCase()}`).then(()=>renderPick());return}
+  if(!okAgain(p))return;
+  b.disabled=true;write(()=>addMealItems(p,meal),`Added ${p.name} to ${meal.toLowerCase()}`).then(()=>renderPick())});
 S.nmode="piece";
 function syncNmode(){const m=S.nmode;
   $("nmode").querySelectorAll("[data-nm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.nm===m)));
@@ -714,7 +831,9 @@ $("entries").addEventListener("click",e=>{
   if(S.confirmDel===id){S.confirmDel=null;S.openMenu=null;write(()=>S.db.doc("entries/"+id).delete(),"Removed")}else{S.confirmDel=id;render();setTimeout(()=>{if(S.confirmDel===id){S.confirmDel=null;render()}},3000)}});
 document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(".menu,.more"))return;S.openMenu=null;S.confirmDel=null;render()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(S.openMenu||S.editId)){S.openMenu=null;S.editId=null;S.confirmDel=null;render()}});
-function presetRow(food,kcal){const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal" min="0" step="1" inputmode="numeric"><button class="ghost" data-rm type="button">✕</button>`;
+function presetRow(food,kcal){const w=document.createElement("div");
+  if(food&&hasAmt(food)){w.innerHTML=piHtml(food,kcal);return w.firstElementChild}
+  const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal" min="0" step="1" inputmode="numeric"><button class="ghost" data-rm type="button">✕</button>`;
   row.querySelector('[data-f="food"]').value=food||"";row.querySelector('[data-f="kcal"]').value=kcal==null?"":kcal;return row}
 $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]");if(!inp)return;
   const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
@@ -723,20 +842,61 @@ $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]
   box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${n(it.kcal)} kcal</small></button>`).join("")+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   box.hidden=false});
 $("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-sugi],[data-sugnew]");if(!b)return;
-  const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),anchor=pad;let row;
-  if(b.matches("[data-sugi]")){const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;row=isW(it)?presetRow(fmtFood(usualOf(it),it.mode,it.name),Math.round(usualOf(it)*perUnit(it))):presetRow(it.name,Number(it.kcal)||0)}
-  else row=presetRow(inp.value.trim(),null);
-  anchor.before(row);inp.value="";const box=pad.querySelector("[data-psug]");box.hidden=true;box.innerHTML="";
-  if(b.matches("[data-sugnew]"))row.querySelector('[data-f="kcal"]').focus();
+  const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),box=pad.querySelector("[data-psug]");
+  if(b.matches("[data-sugnew]")){const name=inp.value.trim();inp.value="";box.hidden=true;box.innerHTML="";
+    const old=pad.querySelector("[data-pnew]");if(old)old.remove();
+    pad.insertAdjacentHTML("beforeend",pNewHtml(name));const nn=pad.querySelector('[data-pn="num"]');nn.focus();return}
+  const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;
+  const row=isW(it)?presetRow(fmtFood(usualOf(it),it.mode,it.name),Math.round(usualOf(it)*perUnit(it))):presetRow(presetFood(1,"",it.name),Number(it.kcal)||0);
+  pad.before(row);updatePTot(pad.closest(".pblock"));inp.value="";box.hidden=true;box.innerHTML="";
   toast("Added to the meal. Tap Save to keep it")});
+// New ingredient card inside a meal (same fields as Find & add). Per 100 g / per dl ingredients are also saved as regular items.
+function pNewHtml(name){return `<div class="newrow pnew" data-pnew data-mode="piece">
+  <div class="nmode" role="group" aria-label="How to count it"><button type="button" data-pnm="piece" aria-pressed="true">kcal</button><button type="button" data-pnm="g" aria-pressed="false">per 100 g</button><button type="button" data-pnm="dl" aria-pressed="false">per dl</button></div>
+  <div class="nl"><input data-pn="name" value="${esc(name)}" placeholder="Name" aria-label="New ingredient name"><input data-pn="num" class="k" type="number" inputmode="decimal" min="0" step="any" placeholder="kcal" aria-label="kcal"><input data-pn="amt" class="k" type="number" inputmode="decimal" min="0" step="any" placeholder="g" aria-label="Amount" hidden></div>
+  <div class="nres" data-pnres hidden></div>
+  <div class="na"><button class="ghost" type="button" data-pcancel>Cancel</button><button class="primary" type="button" data-padd>Add to meal</button></div></div>`}
+function syncPNew(c){const m=c.dataset.mode,num=c.querySelector('[data-pn="num"]'),amt=c.querySelector('[data-pn="amt"]'),res=c.querySelector("[data-pnres]");
+  c.querySelectorAll("[data-pnm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pnm===m)));
+  num.placeholder=m==="piece"?"kcal":m==="g"?"kcal/100 g":"kcal/100 ml";num.setAttribute("aria-label",num.placeholder);
+  amt.hidden=m==="piece";amt.placeholder=m==="g"?"g":"dl";amt.setAttribute("aria-label",m==="g"?"Grams":"dl");
+  const per=Number(num.value),a=Number(amt.value);
+  if(m!=="piece"&&per>0&&a>0){const k=Math.round(m==="g"?a*per/100:a*per);res.innerHTML=`<span>${fmtN(a)} ${m} × ${fmtN(per)} / ${m==="g"?"100 g":"dl"}</span><b>= ${n(k)} kcal</b>`;res.hidden=false}else res.hidden=true}
+$("pedit").addEventListener("click",e=>{
+  const nb=e.target.closest("[data-pnm]");if(nb){const c=nb.closest("[data-pnew]");c.dataset.mode=nb.dataset.pnm;syncPNew(c);return}
+  const c=e.target.closest("[data-pnew]");if(!c)return;
+  if(e.target.closest("[data-pcancel]")){c.remove();return}
+  if(!e.target.closest("[data-padd]"))return;
+  const name=c.querySelector('[data-pn="name"]').value.trim(),raw=c.querySelector('[data-pn="num"]').value,num=Number(raw),m=c.dataset.mode,amt=Number(c.querySelector('[data-pn="amt"]').value);
+  if(!name||raw===""||!(num>=0)){toast(m==="piece"?"Add a name and a kcal number":"Add a name and the label's kcal");return}
+  if(m!=="piece"&&!(amt>0)){toast(m==="g"?"Add how many grams":"Add how many dl");return}
+  const block=c.closest(".pblock");let row,saved=false;
+  if(m==="piece")row=presetRow(presetFood(1,"",name),Math.round(num));
+  else{const q=roundAmt(amt,m);row=presetRow(fmtFood(q,m,name),Math.round(m==="g"?q*num/100:q*num));
+    if(!S.items.some(i=>sfold(i.name)===sfold(name))){saved=true;write(()=>S.db.collection("items").add({name,mode:m,per100:num,usual:q,kcal:Math.round(m==="g"?q*num/100:q*num)}))}}
+  c.closest(".padd").before(row);c.remove();updatePTot(block);
+  toast(saved?"Added to the meal and saved as a regular item. Tap Save to keep the meal":"Added to the meal. Tap Save to keep it")});
+$("pedit").addEventListener("input",e=>{
+  const c=e.target.closest("[data-pnew]");if(c){syncPNew(c);return}
+  const block=e.target.closest(".pblock");if(!block)return;
+  const row=e.target.closest(".pi.amt");
+  if(row&&e.target.matches('[data-f="amt"]')){const q=Number(e.target.value);if(q>=0){row.querySelector('[data-f="kcal"]').value=Math.round((Number(row.dataset.pu)||0)*q)}}
+  else if(row&&e.target.matches('[data-f="kcal"]')){const q=Number(row.querySelector('[data-f="amt"]').value);if(q>0)row.dataset.pu=(Number(e.target.value)||0)/q}
+  if(e.target.matches('[data-pot],[data-scale]')){const pot=S.pots.find(o=>o.id===block.querySelector("[data-pot]").value),sc=Number(block.querySelector("[data-scale]").value),out=block.querySelector("[data-pres]");
+    if(sc>0){const g=Math.max(0,Math.round(sc-(pot?Number(pot.g)||0:0)));block.querySelector('[data-f="cookedG"]').value=g;out.textContent=`${fmtN(sc)} g${pot?` − ${pot.name} ${n(pot.g)} g`:""} = ${fmtN(g)} g of food`}}
+  updatePTot(block)});
+$("pedit").addEventListener("change",e=>{if(e.target.matches("[data-pot]")){const b=e.target.closest(".pblock");const sc=b.querySelector("[data-scale]");if(sc.value)e.target.dispatchEvent(new Event("input",{bubbles:true}))}});
+$("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-rpm],[data-rpp]");if(!b)return;
+  const row=b.closest(".pi.amt"),inp=row.querySelector('[data-f="amt"]'),u=row.dataset.unit,q0=Number(inp.value)||0,q=Math.max(0,roundAmt(q0+(b.matches("[data-rpm]")?-1:1)*stepOf(u),u));
+  inp.value=q;row.querySelector('[data-f="kcal"]').value=Math.round((Number(row.dataset.pu)||0)*q);updatePTot(row.closest(".pblock"))});
 $("pedit").addEventListener("click",e=>{
   if(e.target.id==="newpreset"){if(S.creating)return;S.creating=true;e.target.disabled=true;const id="p"+Date.now().toString(36);S.forcePresets=true;
     S.pq="";$("psrch2").value="";S.focusPid=id;
     write(()=>S.db.doc("presets/"+id).set({name:"New meal",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added. Name it, fill it in and tap Save").finally(()=>{S.creating=false});return}
   const block=e.target.closest(".pblock");if(!block)return;const id=block.dataset.pid;
-  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,...(p.meal?{meal:p.meal}:{}),items:p.items,order:p.order||0}),"Saved")}
-  else if(e.target.matches("[data-additem]")){e.target.parentElement.previousElementSibling.before(presetRow("",null))}
-  else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove()}
+  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,...(p.meal?{meal:p.meal}:{}),items:p.items,order:p.order||0,...(p.portions>0?{portions:p.portions}:{}),...(p.cookedG>0?{cookedG:p.cookedG}:{})}),"Saved")}
+  else if(e.target.matches("[data-additem]")){block.querySelector(".padd").before(presetRow("",null))}
+  else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove();updatePTot(block)}
   else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
 });
 ["s-burn","s-low","s-high","s-goal"].forEach(id=>$(id).addEventListener("change",()=>{const v={burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300,goalKg:Number($("s-goal").value)||79};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
@@ -811,10 +971,18 @@ function startLog(db){
   db.collection("days").onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.days=o;render()},onErr);
   db.collection("presets").onSnapshot(s=>{S.presets=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sfold(a.name).localeCompare(sfold(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
-    if(!typing||S.forcePresets){S.forcePresets=false;renderPresets()}render()},onErr);
+    // Re-draw the editor only when the saved meals changed, so unsaved edits survive unrelated writes.
+    const sig=JSON.stringify(S.presets);
+    if(S.forcePresets||(sig!==S.presetSig&&!typing)){S.forcePresets=false;S.presetSig=sig;renderPresets()}render()},onErr);
+  db.collection("pots").onSnapshot(s=>{S.pots=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sfold(a.name).localeCompare(sfold(b.name),"sv"));
+    const a=document.activeElement;const typing=a&&$("potedit").contains(a)&&a.tagName==="INPUT";
+    const sig=JSON.stringify(S.pots),changed=sig!==S.potSig;
+    if(S.forcePots||(changed&&!typing)){S.forcePots=false;renderPots()}
+    const pt=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");if(changed&&!pt){S.potSig=sig;renderPresets()}render()},onErr);
   db.collection("items").onSnapshot(s=>{S.items=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.name).localeCompare(norm(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("iedit").contains(a)&&a.tagName==="INPUT";
-    if(!typing||S.forceItems){S.forceItems=false;renderItems()}render()},onErr);
+    const sig=JSON.stringify(S.items);
+    if(S.forceItems||(sig!==S.itemSig&&!typing)){S.forceItems=false;S.itemSig=sig;renderItems()}render()},onErr);
   db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render();renderWeight()},onErr);
 }
 
