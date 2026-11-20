@@ -2,6 +2,11 @@
 
 Ideas we have agreed to park. Newest at the top.
 
+## Copy whole meal sections or whole days
+- First version copies single rows only.
+- Later: consider copying a whole meal section (all of Lunch) or a whole day.
+- Parked 2026-11-20.
+
 ## Adjust single ingredients before adding a meal
 - When logging a regular meal, change the amount of each ingredient (or skip one) for that time only, without touching the saved meal.
 - Parked 2026-11-16. Dishes (log by portion or grams) were built first because that was the everyday need.
