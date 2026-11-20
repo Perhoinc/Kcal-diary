@@ -7,16 +7,6 @@ Ideas we have agreed to park. Newest at the top.
 - Later: consider copying a whole meal section (all of Lunch) or a whole day.
 - Parked 2026-11-20.
 
-## Adjust single ingredients before adding a meal
-- When logging a regular meal, change the amount of each ingredient (or skip one) for that time only, without touching the saved meal.
-- Parked 2026-11-16. Dishes (log by portion or grams) were built first because that was the everyday need.
-
-## Dish rows in the log: one row vs ingredients, and marking them
-- A dish is logged as one row, like "1,5 portions Scampi pasta" or "452 g Scampi pasta", not as each ingredient scaled down.
-- Revisit later: mark dish rows in the log somehow (e.g. a small tag) and consider expanding a dish row into its ingredients.
-- Dish rows already carry the id of the regular meal they came from (the preset field), so no old entries need fixing.
-- Parked 2026-11-16.
-
 ## Split combined rows in regular meals
 - A row like "100 g kvarg, 20 g walnuts, 5 g honey" starts with an amount, so it scales as one block when you use the stepper.
 - Later: split such rows into separate ingredients.
