@@ -2,6 +2,11 @@
 
 Ideas we have agreed to park. Newest at the top.
 
+## Show fat and carbs
+- Planned: protein, fat, carbs and fibre are stored, but only protein and fibre are shown on Today.
+- Revisit later: whether to show fat and carbs too, and where.
+- Parked 2026-11-21.
+
 ## Copy whole meal sections or whole days
 - First version copies single rows only.
 - Later: consider copying a whole meal section (all of Lunch) or a whole day.
