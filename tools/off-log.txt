@@ -1,0 +1,4 @@
+Started 2026-11-22T08:00:49.576219+00:00
+Columns found: code, product_name, quantity, brands, countries_tags, energy-kcal_100g, energy_100g, fat_100g, carbohydrates_100g, fiber_100g, proteins_100g
+Rows read: 4926537, sold in Sweden: 28980, kept: 23305, 189 s
+Wrote products-se.json, 1851180 bytes

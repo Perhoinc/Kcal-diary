@@ -1,4 +1,4 @@
-Started 2026-11-22T00:12:03.683079+00:00
+Started 2026-11-22T07:55:52.987156+00:00
 API info failed: <HTTPError 404: 'Not Found'>
 First list page (start): {"_meta": {"totalRecords": 2606, "offset": 0, "limit": 500, "count": 500}, "_links": [{"href": "/api/v1/livsmedel?offset=0&limit=500&sprak=1", "rel": "self", "method": "GET"}, {"href": "/api/v1/livsmedel?offset=0&limit=500&sprak=1", "rel": "first", "method": "GET"}, {"href": "/api/v1/livsmedel?offset=2106&limit=500&sprak=1", "rel": "last", "method": "GET"}, {"href": "/api/v1/livsmedel?offset=500&limit=500&sprak=1", "rel": "next", "method": "GET"}], "livsmedel": [{"livsmedelsTypId": 1, "livsmedelsTyp": "Analyserat", "nummer": 1, "version": "2026-06-29T00:18:24.893", "namn": "Nöt talg", "vetensk
 offset 0: 500 foods
