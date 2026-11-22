@@ -759,22 +759,22 @@ function dbFind(q){const t=sfold(q);if(!S.foods||t.replace(/ /g,"").length<3)ret
     const ws=f.k.split(/[ ,.()]+/),sc=(ws[0]===w0?0:f.k.startsWith(w0)?0.3:ws.some(w=>w.startsWith(w0))?1:2)+(f.dish?0.5:0);m.push([sc,f.k.length,f])}
   m.sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2].k.localeCompare(b[2].k,"sv"));return m.map(x=>x[2])}
 const dbFood=id=>S.foods&&S.foods.find(f=>String(f.id)===String(id));
-// ---- Open Food Facts (branded products sold in Sweden). Searched only when asked, since searches are rate limited; results are kept for the session.
-S.offCache={};
-function offMap(pr){const nm=pr.nutriments||{},name=String(pr.product_name_sv||pr.product_name||"").trim(),brand=String(pr.brands||"").split(",")[0].trim();
-  let kcal=nm["energy-kcal_100g"];if(kcal==null&&nm.energy_100g!=null)kcal=nm.energy_100g/4.184;if(!name||kcal==null||!isFinite(kcal))return null;
-  const r1=v=>v==null||v===""||!isFinite(v)?null:Math.round(Number(v)*10)/10,liquid=/^(ml|cl|l)$/i.test(String(pr.product_quantity_unit||""))||/\d\s*(ml|cl|l)\b/i.test(String(pr.quantity||""));
-  const full=brand&&!sfold(name).includes(sfold(brand))?`${name} (${brand})`:name;
-  return {code:String(pr.code),name,brand,full,qty:String(pr.quantity||"").trim(),mode:liquid?"dl":"g",kcal:Math.round(kcal),p:r1(nm.proteins_100g),f:r1(nm.fat_100g),c:r1(nm.carbohydrates_100g),fib:r1(nm.fiber_100g)}}
-async function offSearch(q){const key=sfold(q);if(S.offCache[key]&&S.offCache[key].status==="ok"){S.off=S.offCache[key];S.ext="off";renderPick();return}
-  S.off={q:key,status:"loading",list:[]};S.ext="off";renderPick();
-  const url="https://se.openfoodfacts.org/cgi/search.pl?search_terms="+encodeURIComponent(q.trim())+"&search_simple=1&action=process&json=1&page_size=40&fields=code,product_name,product_name_sv,brands,quantity,product_quantity_unit,nutriments";
-  let res;try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),20000);const r=await fetch(url,{signal:ac.signal});clearTimeout(t);if(!r.ok)throw new Error(r.status);
-    const d=await r.json(),seen=new Set(),list=[];
-    for(const pr of d.products||[]){const m=offMap(pr);if(!m)continue;const k=sfold(m.name)+"|"+sfold(m.brand);if(seen.has(k))continue;seen.add(k);list.push(m)}
-    res={q:key,status:"ok",list}}catch(_){res={q:key,status:"error",list:[]}}
-  if(res.status==="ok")S.offCache[key]=res;
-  if(S.off&&S.off.q===key){S.off=res;renderPick()}}
+// ---- Open Food Facts: products sold in Sweden (products-se.json, ODbL), copied monthly by the same GitHub job as foods.json.
+// Loaded the first time you tap Search Open Food Facts, then searched on the phone, also offline.
+const liquidRe=/\d\s*(ml|cl|l|liter|litre)\b/i;
+function loadOff(){if(S.offFoods)return Promise.resolve(S.offFoods);if(S.offP)return S.offP;
+  S.offP=fetch("products-se.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{
+    S.offFoods=(d.rows||[]).map(r=>{const [code,name,brand,qty,liq,kcal,p,f,c,fib]=r,full=brand&&!sfold(name).includes(sfold(brand))?`${name} (${brand})`:name;
+      return {code:String(code),name,brand,qty,mode:liq||liquidRe.test(qty)||/dryck\b|drink\b/i.test(name)?"dl":"g",kcal,p,f,c,fib,full,k:sfold(name+" "+brand),kn:sfold(name)}});return S.offFoods})
+    .catch(()=>{S.offP=null;return null});return S.offP}
+// Best first, as for Livsmedelsverket: product names whose first word is the first search word, then names starting with it, then any word; shorter names first.
+function offFind(q){const t=sfold(q);if(!S.offFoods||t.replace(/ /g,"").length<3)return [];const toks=t.split(" ").filter(Boolean),w0=toks[0],m=[];
+  for(const f of S.offFoods){if(!toks.every(x=>f.k.includes(x)))continue;const ws=f.kn.split(/[ ,.()-]+/);
+    m.push([ws[0]===w0?0:f.kn.startsWith(w0)?0.3:ws.some(w=>w.startsWith(w0))?1:2,f.kn.length,f])}
+  m.sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2].k.localeCompare(b[2].k,"sv"));return m.map(x=>x[2])}
+async function offSearch(q){const key=sfold(q);S.ext="off";
+  if(!S.offFoods){S.off={q:key,status:"loading",list:[]};renderPick();const r=await loadOff();if(!S.off||S.off.q!==key)return;if(!r){S.off={q:key,status:"error",list:[]};renderPick();return}}
+  S.off={q:key,status:"ok",list:offFind(q)};renderPick()}
 // Products already saved as a regular item (by barcode or by name) are left out.
 const offShown=()=>{if(!S.off||S.off.status!=="ok")return [];const have=new Set(S.items.map(i=>i.off).filter(Boolean).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
   return S.off.list.filter(m=>!have.has(m.code)&&!names.has(sfold(m.full)))};
@@ -881,21 +881,27 @@ function renderPick(){
   // Outside sources share one slot: Livsmedelsverket by default, Open Food Facts once searched. The other folds into one line.
   let drows="";
   if(searching&&sfold(S.q).replace(/ /g,"").length>=3){if(!S.foods)loadFoods().then(f=>{if(f)renderPick()});
-    const db=dbFind(S.q),key=sfold(S.q),offHere=S.off&&S.off.q===key?S.off:null,ext=offHere&&S.ext==="off"?"off":"lv";
+    const db=dbFind(S.q),key=sfold(S.q);
+    if(S.offFoods&&!(S.off&&S.off.q===key&&S.off.status==="ok"))S.off={q:key,status:"ok",list:offFind(S.q)};
+    // Open Food Facts opens by itself when Livsmedelsverket has nothing for the search.
+    const offHere=S.off&&S.off.q===key?S.off:null,ext=offHere&&(S.ext==="off"||(!db.length&&offHere.status==="ok"&&offShown().length))?"off":"lv";
     const lvFold=db.length?`<button class="dbfold" type="button" data-ext="lv"><span>Livsmedelsverket · ${db.length} match${db.length===1?"":"es"}</span><b>Show</b></button>`:"";
     if(ext==="lv"){const show=db.slice(0,S.dbMore?15:3);
       if(db.length)drows=`<div class="dbh"><span>From Livsmedelsverket</span><span>${show.length} of ${db.length}</span></div>`+
         show.map(f=>`<div class="prow db" data-dbid="${esc(f.id)}"><button class="pname" type="button" data-dbpick>${esc(f.name)}<span class="sub">${dbLab(f)}</span></button><span></span><button class="addw" type="button" data-dbpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")+
         (db.length>show.length&&show.length<15?`<button class="dbmore" type="button" data-dbmore>Show ${Math.min(15,db.length)-show.length} more</button>`:"");
-      if(offHere&&offHere.status==="ok"){const k=offShown().length;drows+=`<button class="dbfold" type="button" data-ext="off"><span>Open Food Facts · ${k} product${k===1?"":"s"}</span><b>Show</b></button>`}
+      // Once the products are on the phone, the count shows straight away, still folded.
+      if(S.offFoods&&!(offHere&&offHere.status==="ok")){S.off={q:key,status:"ok",list:offFind(S.q)}}
+      const oh=S.off&&S.off.q===key&&S.off.status==="ok"?S.off:null;
+      if(oh){const k=offShown().length;if(k)drows+=`<button class="dbfold" type="button" data-ext="off"><span>Open Food Facts · ${k} product${k===1?"":"s"}</span><b>Show</b></button>`}
       else drows+=`<button class="dbmore" type="button" data-offsearch>Search Open Food Facts for “${esc(S.q.trim())}”</button>`}
     else{drows=lvFold+`<div class="dbh"><span>From Open Food Facts</span><span>${offHere.status==="ok"?`${Math.min(offShown().length,S.offMore?12:3)} of ${offShown().length}`:""}</span></div>`;
-      if(offHere.status==="loading")drows+=`<div class="dbmsg">Searching Open Food Facts…</div>`;
-      else if(offHere.status==="error")drows+=`<div class="dbmsg">Couldn't reach Open Food Facts. Check your connection and <button class="dbmore" type="button" data-offsearch style="display:inline;width:auto;padding:0">try again</button>.</div>`;
+      if(offHere.status==="loading")drows+=`<div class="dbmsg">Loading Open Food Facts' products (once, about 0.6 MB)…</div>`;
+      else if(offHere.status==="error")drows+=`<div class="dbmsg">Couldn't load Open Food Facts' products. Check your connection and <button class="dbmore" type="button" data-offsearch style="display:inline;width:auto;padding:0">try again</button>.</div>`;
       else{const all=offShown(),show=all.slice(0,S.offMore?12:3);
         drows+=show.length?show.map(m=>`<div class="prow db" data-offid="${esc(m.code)}"><button class="pname" type="button" data-offpick>${esc(m.name)}<span class="sub">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</span><span class="sub">${offLab(m)}</span></button><span></span><button class="addw" type="button" data-offpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")
           +(all.length>show.length?`<button class="dbmore" type="button" data-offmore>Show ${Math.min(12,all.length)-show.length} more</button>`:"")
-          :`<div class="dbmsg">No products with nutrition data found on Open Food Facts.</div>`}}}
+          :`<div class="dbmsg">No product sold in Sweden matches on Open Food Facts.</div>`}}}
   box.innerHTML=(mrows+irows+drows)||(searching?`<div class="empty" style="padding:10px">No regular item or meal matches “${esc(S.q.trim())}”.</div>`:`<div class="empty" style="padding:10px">No regular items yet. Tap ⋯ then ☆ on a logged item to save one.</div>`);
   box.scrollTop=top;
   pickSum();

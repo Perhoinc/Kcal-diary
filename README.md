@@ -16,4 +16,6 @@ The app works offline. Before pushing any change to a file, bump `VERSION` in `s
 
 `foods.json` is a trimmed copy of the Swedish Food Composition Database (Livsmedelsdatabasen) from Livsmedelsverket, the Swedish Food Agency, published under the Creative Commons Attribution 4.0 licence. It holds each food's Swedish name and its kcal, protein, fat, carbohydrates and fibre per 100 g.
 
-It is fetched by `tools/fetch_foods.py`, which GitHub runs from `.github/workflows/foods.yml` on the 1st of each month, whenever those files change, or by hand from the Actions tab (Update food database › Run workflow). `tools/foods-log.txt` shows what the last run did.
+`products-se.json` holds the products sold in Sweden from Open Food Facts (openfoodfacts.org), with name, brand, pack size and kcal, protein, fat, carbohydrates and fibre per 100 g (per 100 ml for drinks). It is a derived database of Open Food Facts and is available under the Open Database License (ODbL).
+
+Both are fetched by `tools/fetch_foods.py` and `tools/fetch_off.py`, which GitHub runs from `.github/workflows/foods.yml` on the 1st of each month, whenever those files change, or by hand from the Actions tab (Update food database › Run workflow). `tools/foods-log.txt` and `tools/off-log.txt` show what the last run did.

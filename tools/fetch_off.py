@@ -45,7 +45,7 @@ def main():
             seen.add(key)
             qty = (row.get("quantity") or "").strip()[:20]
             unit = (row.get("product_quantity_unit") or "").strip().lower()
-            liquid = 1 if unit in ("ml", "cl", "l") or re.search(r"\d\s*(ml|cl|l)\b", qty, re.I) else 0
+            liquid = 1 if unit in ("ml", "cl", "l") or re.search(r"\d\s*(ml|cl|l|liter|litre)\b", qty, re.I) else 0
             r1 = lambda v: None if v is None else round(v, 1)
             rows.append([row.get("code") or "", name[:80], brand[:40], qty, liquid, round(kcal),
                          r1(num(row.get("proteins_100g"))), r1(num(row.get("fat_100g"))), r1(num(row.get("carbohydrates_100g"))), r1(num(row.get("fiber_100g")))])
