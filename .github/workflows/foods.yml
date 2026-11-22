@@ -1,5 +1,6 @@
 name: Update food database
-# Fetches Livsmedelsverket's food database on GitHub's servers and saves foods.json for the app.
+# Fetches Livsmedelsverket's food database and Open Food Facts' Swedish products on GitHub's servers
+# and saves foods.json and products-se.json for the app.
 on:
   workflow_dispatch:
   schedule:
@@ -8,6 +9,7 @@ on:
     branches: [main]
     paths:
       - "tools/fetch_foods.py"
+      - "tools/fetch_off.py"
       - ".github/workflows/foods.yml"
 permissions:
   contents: write
@@ -15,16 +17,19 @@ concurrency: foods
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch and trim the database
+      - name: Fetch and trim Livsmedelsverket's database
         run: python3 tools/fetch_foods.py
+      - name: Fetch Open Food Facts' products sold in Sweden
+        run: python3 tools/fetch_off.py
       - name: Save the result in the repo
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/foods-log.txt
+          git add tools/foods-log.txt tools/off-log.txt
           [ -f foods.json ] && git add foods.json
-          git diff --cached --quiet || git commit -m "Update food database from Livsmedelsverket"
+          [ -f products-se.json ] && git add products-se.json
+          git diff --cached --quiet || git commit -m "Update food databases (Livsmedelsverket, Open Food Facts)"
           git pull --rebase -q origin main && git push
