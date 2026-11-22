@@ -1,5 +1,5 @@
 // Bump VERSION whenever any file below changes, so installed copies fetch the new files.
-const VERSION = "v25";
+const VERSION = "v26";
 const CACHE = "kcal-diary-" + VERSION;
 const FILES = [
   "./",
@@ -38,6 +38,14 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  // The food database is updated monthly on its own, so it is fetched fresh when online and kept for offline use.
+  if (new URL(req.url).pathname.endsWith("/foods.json")) {
+    e.respondWith(caches.open(CACHE).then(async c => {
+      try { const r = await fetch(req, { cache: "no-cache" }); if (r.ok) c.put(req, r.clone()); return r; }
+      catch (_) { return (await c.match(req, { ignoreSearch: true })) || new Response("{}", { status: 503 }); }
+    }));
+    return;
+  }
   e.respondWith(
     caches.open(CACHE).then(async c => {
       const hit = await c.match(req, { ignoreSearch: true });
