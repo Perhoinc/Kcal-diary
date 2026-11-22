@@ -11,3 +11,9 @@ The log is stored in the browser's local storage on each device. Nothing is stor
 On iPhone: open the address in Safari, then Share, then Add to Home Screen. The home-screen app has its own storage, so import a backup there once.
 
 The app works offline. Before pushing any change to a file, bump `VERSION` in `sw.js` so installed copies download the new files.
+
+## Food data
+
+`foods.json` is a trimmed copy of the Swedish Food Composition Database (Livsmedelsdatabasen) from Livsmedelsverket, the Swedish Food Agency, published under the Creative Commons Attribution 4.0 licence. It holds each food's Swedish name and its kcal, protein, fat, carbohydrates and fibre per 100 g.
+
+It is fetched by `tools/fetch_foods.py`, which GitHub runs from `.github/workflows/foods.yml` on the 1st of each month, whenever those files change, or by hand from the Actions tab (Update food database › Run workflow). `tools/foods-log.txt` shows what the last run did.
