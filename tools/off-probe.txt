@@ -1,0 +1,129 @@
+===== https://world.openfoodfacts.org/cgi/search.pl?search_terms=havredryck&search_simple=1&action=process&json=1&page_size=6&fields=code,product_name,product_name_sv,brands,quantity,nutriments,nutrition_data_per&tagtype_0=countries&tag_contains_0=contains&tag_0=sweden
+HTTP/2 503 
+content-type: text/html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page temporarily unavailable - Open Food Facts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #fdf6e3 0%, #fff8e7 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333333;
+        }
+
+        .container {
+            max-width: 600px;
+            text-align: center;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 48px 40px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin: 0 auto 24px;
+            display: block;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: #fff3e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #333333;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            color: #666666;
+        }
+
+        .actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #ff6600;
+            color: #ffffff;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #ff6600;
+            border: 2px solid #ff6600;
+        }
+
+        .donate-btn {
+    
+===== https://se.openfoodfacts.org/cgi/search.pl?search_terms=havregryn&search_simple=1&action=process&json=1&page_size=6&fields=code,product_name,product_name_sv,brands,quantity,nutriments
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+x-content-type-options: nosniff
+access-control-allow-origin: *
+access-control-allow-methods: HEAD, GET, PATCH, POST, PUT, OPTIONS
+access-control-allow-headers: DNT,User-Agent,X-User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,If-None-Match,Authorization
+access-control-expose-headers: Content-Length,Content-Range
+access-control-max-age: 1728000
+{"count":40,"page":1,"page_count":6,"page_size":6,"products":[{"brands":"AXA","code":"7310130321122","nutriments":{"added-sugars":0,"added-sugars_100g":0,"added-sugars_modifier":"~","added-sugars_serving":0,"added-sugars_unit":"g","added-sugars_value":0,"beta-glucan":4,"beta-glucan_100g":4,"beta-glucan_serving":1.6,"beta-glucan_unit":"g","beta-glucan_value":4,"carbohydrates":60,"carbohydrates_100g":60,"carbohydrates_serving":24,"carbohydrates_unit":"g","carbohydrates_value":60,"energy":1550,"energy-kcal":375,"energy-kcal_100g":375,"energy-kcal_serving":150,"energy-kcal_unit":"kcal","energy-kcal_value":375,"energy-kj":1550,"energy-kj_100g":1550,"energy-kj_serving":620,"energy-kj_unit":"kJ","energy-kj_value":1550,"energy_100g":1550,"energy_serving":620,"energy_unit":"kJ","energy_value":1550,"fat":7,"fat_100g":7,"fat_serving":2.8,"fat_unit":"g","fat_value":7,"fiber":10,"fiber_100g":10,"fiber_serving":4,"fiber_unit":"g","fiber_value":10,"fruits-vegetables-legumes-estimate-from-ingredients_100g":0,"fruits-vegetables-nuts-estimate-from-ingredients_100g":0,"iron":0.00525,"iron_100g":0.00525,"iron_serving":0.0021,"iron_unit":"g","iron_value":0.00525,"magnesium":0.13,"magnesium_100g":0.13,"magnesium_serving":0.052,"magnesium_unit":"g","magnesium_value":0.13,"phosphorus":0.425,"phosphorus_100g":0.425,"phosphorus_serving":0.17,"phosphorus_unit":"g","phosphorus_value":0.425,"potassium":0.0004,"potassium_100g":0.0004,"potassium_serving":0.00016,"potassium_unit":"g","potassium_value":0.0004,"proteins":12,"proteins_100g":12,"proteins_serving":4.8,"proteins_unit":"g","proteins_value":12,"salt":0,"salt_100g":0,"salt_serving":0,"salt_unit":"g","salt_value":0,"saturated-fat":1.2,"saturated-fat_100g":1.2,"saturated-fat_serving":0.48,"saturated-fat_unit":"g","saturated-fat_value":1.2,"sodium":0,"sodium_100g":0,"sodium_serving":0,"sodium_unit":"g","sodium_value":0,"sugars":1.3,"sugars_100g":1.3,"sugars_serving":0.52,"sugars_unit":"g","sugars_value":1.3,"vitamin-pp":3.1e-06,"vitamin-pp_100g":3.1e-06,"vitamin-pp_serving":1.24e-06,"vitamin-pp_unit":"g","vitamin-pp_value":3.1e-06,"zinc":0.00325,"zinc_100g":0.00325,"zinc_serving":0.0013,"zinc_unit":"g","zinc_value":0.00325},"nutrition_data":"on","nutrition_data_prepared_per":"100g","product_name":"Havregryn","product_name_sv":"Havregryn","product_quantity":750,"product_quantity_unit":"g","quantity":"750 g"},{"brands":"Gyllenhamars Havregryn","code":"7310130321283","nutriments":{"added-sugars":0,"added-sugars_100g":0,"added-sugars_mo
+===== https://search.openfoodfacts.org/search?q=havredryck&page_size=4&langs=sv&fields=code,product_name,brands,quantity,nutriments,countries_tags
+HTTP/2 200 
+content-type: application/json
+access-control-allow-credentials: true
+{"hits":[{"code":"7340083483981","brands":["Garant"],"quantity":"1l","countries_tags":["en:germany","en:sweden"],"nutriments":{"carbohydrates_100g":7,"energy-kcal_100g":46,"energy-kj_100g":191,"fat_100g":1.5,"fiber_100g":0.5,"proteins_100g":0.7,"salt_100g":0.1,"saturated-fat_100g":0.2,"sodium_100g":0.04,"sugars_100g":4.1},"product_name":"Havredryck"},{"code":"6408430102204","brands":["Valio"],"quantity":"1 l","countries_tags":["en:finland"],"nutriments":{"carbohydrates_100g":6.6,"energy-kcal_100g":40,"energy-kj_100g":170,"fat_100g":1,"proteins_100g":1.2,"salt_100g":0.12,"saturated-fat_100g":0.1,"sodium_100g":0.048,"sugars_100g":3.5},"product_name":"Oddlygood Kaurajuoma"},{"code":"7340083471070","brands":["Eldorado"],"quantity":"1 l","countries_tags":["en:sweden"],"nutriments":{"carbohydrates_100g":4.8,"energy-kcal_100g":28,"energy-kj_100g":117,"fat_100g":0.7,"fiber_100g":0.3,"proteins_100g":0.4,"salt_100g":0.1,"saturated-fat_100g":0.1,"sodium_100g":0.04,"sugars_100g":2.8},"product_name":"Havredryck"},{"code":"6410405332356","brands":["Pirkka"],"quantity":"1 L","countries_tags":["en:finland"],"nutriments":{"carbohydrates_100g":7.8,"energy-kcal_100g":62,"energy-kj_100g":260,"fat_100g":2.8,"proteins_100g":1,"salt_100g":0.1,"saturated-fat_100g":0.2,"sodium_100g":0.04,"sugars_100g":3.5},"product_name":"Kaurajuoma barista"}],"aggregations":null,"facets":{},"charts":{},"page":1,"page_size":4,"page_count":6,"debug":{"query":{"query":{"bool":{"should":[{"match_phrase":{"product_name.sv":{"query":"havredryck","boost":2.0}}},{"match_phrase":{"generic_name.sv":{"query":"havredryck","boost":2.0}}},{"match_phrase":{"brands":{"query":"havredryck","boost":2.0}}},{"multi_match":{"query":"havredryck","fields":["product_name.sv","generic_name.sv","brands"]}}]}},"size":4,"from":0}},"took":5,"timed_out":false,"count":21,"is_count_exact":true,"warnings":null}
+===== https://world.openfoodfacts.org/api/v2/product/7340011358701.json?fields=code,product_name,brands,nutriments
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+x-content-type-options: nosniff
+access-control-allow-origin: *
+access-control-allow-methods: HEAD, GET, PATCH, POST, PUT, OPTIONS
+access-control-allow-headers: DNT,User-Agent,X-User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,If-None-Match,Authorization
+access-control-expose-headers: Content-Length,Content-Range
+access-control-max-age: 1728000
+{"code":"7340011358701","product":{"brands":"Coop","code":"7340011358701","nutriments":{"added-sugars":0,"added-sugars_100g":0,"added-sugars_modifier":"~","added-sugars_unit":"g","added-sugars_value":0,"carbohydrates":58,"carbohydrates_100g":58,"carbohydrates_unit":"g","carbohydrates_value":58,"energy":1550,"energy-kcal":370,"energy-kcal_100g":370,"energy-kcal_unit":"kcal","energy-kcal_value":370,"energy-kj":1550,"energy-kj_100g":1550,"energy-kj_unit":"kJ","energy-kj_value":1550,"energy_100g":1550,"energy_unit":"kJ","energy_value":1550,"fat":7,"fat_100g":7,"fat_unit":"g","fat_value":7,"fiber":10,"fiber_100g":10,"fiber_unit":"g","fiber_value":10,"fruits-vegetables-legumes-estimate-from-ingredients_100g":0,"fruits-vegetables-nuts-estimate-from-ingredients_100g":0,"nova-group":1,"nova-group_100g":1,"nova-group_serving":1,"nova-group_unit":"","nova-group_value":1,"proteins":13,"proteins_100g":13,"proteins_unit":"g","proteins_value":13,"salt":0.01,"salt_100g":0.01,"salt_unit":"g","salt_value":0.01,"saturated-fat":1.2,"saturated-fat_100g":1.2,"saturated-fat_unit":"g","saturated-fat_value":1.2,"sodium":0.004,"sodium_100g":0.004,"sodium_unit":"g","sodium_value":0.004,"sugars":2.2,"sugars_100g":2.2,"sugars_unit":"g","sugars_value":2.2},"nutriments_estimated":{"alcohol_100g":0,"beta-carotene_100g":0,"calcium_100g":0.0843,"cholesterol_100g":0,"copper_100g":0.0003,"fructose_100g":0,"galactose_100g":0,"glucose_100g":0,"iodine_100g":5e-07,"iron_100g":0.00405,"lactose_100g":0,"magnesium_100g":0.148,"maltose_100g":0,"manganese_100g":0.00472,"pantothenic-acid_100g":0.00131,"phosphorus_100g":0.422,"phylloquinone_100g":2e-06,"polyols_100g":0,"potassium_100g":0.377,"selenium_100g":3.05e-06,"starch_100g":56.9,"sucrose_100g":0.97,"vitamin-a_100g":0,"vitamin-b12_100g":0,"vitamin-b1_100g":0.00043,"vitamin-b2_100g":0.00014,"vitamin-b6_100g":0.00012,"vitamin-b9_100g":3.96e-05,"vitamin-c_100g":0,"vitamin-d_100g":0,"vitamin-e_100g":0.00059,"vitamin-pp_100g":0.00096,"water_100g":10.1,"zinc_100g":0.00333},"nutrition_data":"on","nutrition_data_per":"100g","nutrition_data_prepared_per":"100g","product_name":"Havregryn"},"status":1,"status_verbose":"product found"}
+===== preflight-free check done
