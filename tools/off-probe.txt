@@ -1,0 +1,55 @@
+== se search.pl (as the app calls it)
+  try 1: code=200 time=1.747556s size=59301
+    content-type: application/json; charset=utf-8
+    access-control-allow-origin: *
+  try 2: code=200 time=1.418610s size=59301
+    content-type: application/json; charset=utf-8
+    access-control-allow-origin: *
+  try 3: code=200 time=1.167692s size=59301
+    content-type: application/json; charset=utf-8
+    access-control-allow-origin: *
+    body: {"count":31,"page":1,"page_count":31,"page_size":40,"products":[{"brands":"ICA","code":"7318690173830","nutriments":{"added-sugars":0,"added-sugars_100g":0,"added-sugars_modifier":"~","added-sugars_serving":0,"added-sugars_unit":"g","added-sugars_value":0,"calcium":0.12,"calcium_100g":0.12,"calcium_
+== se search.pl, page_size 20, no nutriments field list
+  try 1: code=200 time=1.339676s size=253155
+    content-type: application/json; charset=utf-8
+    access-control-allow-origin: *
+  try 2: code=503 time=0.610358s size=25281
+    content-type: text/html
+  try 3: code=503 time=0.711818s size=25281
+    content-type: text/html
+    body: <!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Page temporarily unavailable - Open Food Facts</title>    <style>        * {            margin: 0;            padding: 0;            box-sizi
+== world search.pl
+  try 1: code=503 time=0.723224s size=25281
+    content-type: text/html
+  try 2: code=503 time=0.598907s size=25281
+    content-type: text/html
+  try 3: code=503 time=0.666882s size=25281
+    content-type: text/html
+    body: <!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Page temporarily unavailable - Open Food Facts</title>    <style>        * {            margin: 0;            padding: 0;            box-sizi
+== search-a-licious
+  try 1: code=200 time=0.806870s size=7004
+    content-type: application/json
+  try 2: code=200 time=0.619442s size=7004
+    content-type: application/json
+  try 3: code=200 time=0.582630s size=7004
+    content-type: application/json
+    body: {"hits":[{"code":"7340083483981","brands":["Garant"],"quantity":"1l","countries_tags":["en:germany","en:sweden"],"nutriments":{"carbohydrates_100g":7,"energy-kcal_100g":46,"energy-kj_100g":191,"fat_100g":1.5,"fiber_100g":0.5,"proteins_100g":0.7,"salt_100g":0.1,"saturated-fat_100g":0.2,"sodium_100g":
+== search-a-licious, full headers
+    HTTP/2 200 
+    server: nginx/1.31.9
+    date: Sun, 22 Nov 2026 07:54:49 GMT
+    content-type: application/json
+    content-length: 16631
+    access-control-allow-credentials: true
+    
+== search-a-licious, preflight
+    HTTP/2 400 
+    server: nginx/1.31.9
+    date: Sun, 22 Nov 2026 07:54:49 GMT
+    content-type: text/plain; charset=utf-8
+    content-length: 22
+    vary: Origin
+    access-control-allow-methods: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
+    access-control-max-age: 600
+    access-control-allow-credentials: true
+    
