@@ -3,7 +3,7 @@
 Ideas we have agreed to park. Newest at the top.
 
 ## Match existing items to Livsmedelsverket (step 3 of the nutrients plan)
-- A review list that suggests a Livsmedelsverket food for each regular item; Use / Skip / Other match. Fills only empty nutrient fields, never changes kcal.
+- A review list that suggests a Livsmedelsverket food (generic foods) or an Open Food Facts product (branded items) for each regular item; Use / Skip / Other match. Fills only empty nutrient fields, never changes kcal.
 - Piece and dl items need the weight of one piece or one dl once.
 - Afterwards, offer to fill in regular meals that use the matched items.
 - Planned 2026-11-22, to do after using steps 1–2 for a while.
