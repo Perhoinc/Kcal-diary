@@ -787,22 +787,24 @@ const offByCode=code=>S.offFoods&&S.offFoods.find(m=>m.code===String(code));
 function offAvail(q){if(!S.offFoods)return null;const codes=new Set(S.items.map(i=>i.off).filter(Boolean).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
   return offFind(q).filter(m=>!codes.has(m.code)&&!names.has(sfold(m.full)))}
 // The database part of a suggestion box. Livsmedelsverket and Open Food Facts share one slot of three results; the other folds into one line.
-function extSugHtml(q,ext){if(sfold(q).replace(/ /g,"").length<3)return "";
+function extSugHtml(q,ext,more){if(sfold(q).replace(/ /g,"").length<3)return "";
   const lv=dbFind(q),off=offAvail(q),useOff=!!(off&&off.length&&(ext==="off"||!lv.length));let h="";
   const fold=(src,lab)=>`<button type="button" class="sf" data-sugext="${src}"><span>${lab}</span><b>Show</b></button>`;
-  if(!useOff){if(lv.length)h+=`<div class="dbh"><span>From Livsmedelsverket</span><span>${Math.min(3,lv.length)} of ${lv.length}</span></div>`+lv.slice(0,3).map(f=>`<button type="button" data-sugdb="${esc(f.id)}"><span>${esc(f.name)}</span><small class="num">${dbLab(f)}</small></button>`).join("");
+  const nL=more?15:3,nO=more?12:3,moreB=(shown,all,max)=>all>shown&&shown<max?`<button type="button" class="sf" data-sugmore><span>Show ${Math.min(max,all)-shown} more</span></button>`:"";
+  if(!useOff){if(lv.length)h+=`<div class="dbh"><span>From Livsmedelsverket</span><span>${Math.min(nL,lv.length)} of ${lv.length}</span></div>`+lv.slice(0,nL).map(f=>`<button type="button" data-sugdb="${esc(f.id)}"><span>${esc(f.name)}</span><small class="num">${dbLab(f)}</small></button>`).join("")+moreB(Math.min(nL,lv.length),lv.length,15);
     if(off){if(off.length)h+=fold("off",`Open Food Facts · ${off.length} product${off.length===1?"":"s"}`)}
     else h+=`<button type="button" class="mk" data-sugoffload><span>Search Open Food Facts for “${esc(q.trim())}”</span></button>`}
   else{if(lv.length)h+=fold("lv",`Livsmedelsverket · ${lv.length} match${lv.length===1?"":"es"}`);
-    h+=`<div class="dbh"><span>From Open Food Facts</span><span>${Math.min(3,off.length)} of ${off.length}</span></div>`+off.slice(0,3).map(m=>`<button type="button" data-sugoff="${esc(m.code)}"><span>${esc(m.name)}<small class="ob">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</small></span><small class="num">${offLab(m)}</small></button>`).join("")}
+    h+=`<div class="dbh"><span>From Open Food Facts</span><span>${Math.min(nO,off.length)} of ${off.length}</span></div>`+off.slice(0,nO).map(m=>`<button type="button" data-sugoff="${esc(m.code)}"><span>${esc(m.name)}<small class="ob">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</small></span><small class="num">${offLab(m)}</small></button>`).join("")+moreB(Math.min(nO,off.length),off.length,12)}
   return h}
 // Fold lines and the first Open Food Facts load inside a suggestion box (regular meals and opened meal rows)
-function sugExtClick(e){const b=e.target.closest(".padd [data-sugext],.padd [data-sugoffload],.gadd [data-sugext],.gadd [data-sugoffload]");if(!b)return false;
+function sugExtClick(e){const b=e.target.closest(".padd [data-sugext],.padd [data-sugoffload],.padd [data-sugmore],.gadd [data-sugext],.gadd [data-sugoffload],.gadd [data-sugmore]");if(!b)return false;
   const inp=b.closest(".padd,.gadd").querySelector("[data-psrch],[data-gsrch]");if(!inp)return false;
   const again=()=>inp.dispatchEvent(new Event("input",{bubbles:true}));
-  if(b.matches("[data-sugext]")){inp.dataset.ext=b.dataset.sugext;again();return true}
+  if(b.matches("[data-sugmore]")){inp.dataset.more="1";const bx=b.closest(".psug"),top=bx.scrollTop;again();bx.scrollTop=top;return true}
+  if(b.matches("[data-sugext]")){inp.dataset.ext=b.dataset.sugext;inp.dataset.more="";again();return true}
   b.disabled=true;b.querySelector("span").textContent="Loading Open Food Facts' products (once, about 0.6 MB)…";
-  loadOff().then(r=>{if(!r){b.disabled=false;b.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}inp.dataset.ext="off";again()});return true}
+  loadOff().then(r=>{if(!r){b.disabled=false;b.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}inp.dataset.ext="off";inp.dataset.more="";again()});return true}
 const offLab=m=>`${n(m.kcal)} kcal / ${m.mode==="dl"?"100 ml":"100 g"}${m.p!=null?` · <span class="pp">P ${fmtG(m.p)} g</span>`:""}`;
 const dbLab=f=>`${n(f.kcal)} kcal / 100 g${f.p!=null?` · <span class="pp">P ${fmtG(f.p)} g</span>`:""}`;
 const hit=(name,toks)=>{const h=sfold(name);return toks.every(t=>h.includes(t))};
@@ -958,7 +960,7 @@ function filterItems(){
   const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0;
   $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks);c.hidden=!ok;if(ok)shown++});
   const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”. Add it below.`}
-  const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"");ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
+  const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"",!!S.imore);ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
   const nn=$("newitem")&&$("newitem").querySelector('[data-f="name"]');
   if(nn&&S.iAuto!==false){const want=toks.length&&shown===0?q:"";if(nn.value===(S.iAutoVal||"")||nn.value==="")nn.value=want;S.iAutoVal=want}
 }
@@ -1125,7 +1127,7 @@ $("iedit").addEventListener("change",e=>{const c=e.target.closest(".ic");if(!c)r
 S.inutOpen={};
 $("iedit").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.inut"))return;const c=d.closest(".ic");const k=c&&(c.dataset.iid||"new");if(k){if(d.open)S.inutOpen[k]=1;else delete S.inutOpen[k]}
   const sm=d.querySelector("summary");if(sm&&sm.firstChild)sm.firstChild.textContent=d.open?"▾ Nutrients ":"▸ Nutrients "},true);
-$("isrch").addEventListener("input",e=>{S.iq=e.target.value;S.iAuto=true;S.iext="";filterItems()});
+$("isrch").addEventListener("input",e=>{S.iq=e.target.value;S.iAuto=true;S.iext="";S.imore=false;filterItems()});
 // Picking a database food fills the new-item card in Edit (shaded where the values came from the database)
 function fillNewItem(f,src){const c=$("newitem");if(!c)return;const off=src==="off",m=f.mode||"g";
   c.querySelector('[data-f="name"]').value=off?f.full:f.name;c.querySelector('[data-f="mode"]').value=m;syncItemCard(c);
@@ -1136,9 +1138,10 @@ function fillNewItem(f,src){const c=$("newitem");if(!c)return;const off=src==="o
   S.iAuto=false;const ib=$("isug");if(ib){ib.hidden=true;ib.innerHTML=""}
   c.scrollIntoView({block:"center"});c.querySelector('[data-f="usual"]').focus()}
 $("iedit").addEventListener("click",e=>{
-  const x=e.target.closest("#isug [data-sugext]");if(x){S.iext=x.dataset.sugext;filterItems();return}
+  const x=e.target.closest("#isug [data-sugext]");if(x){S.iext=x.dataset.sugext;S.imore=false;filterItems();return}
+  const mo=e.target.closest("#isug [data-sugmore]");if(mo){const top=$("isug").scrollTop;S.imore=true;filterItems();$("isug").scrollTop=top;return}
   const l=e.target.closest("#isug [data-sugoffload]");if(l){l.disabled=true;l.querySelector("span").textContent="Loading Open Food Facts' products (once, about 0.6 MB)…";
-    loadOff().then(r=>{if(!r){l.disabled=false;l.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}S.iext="off";filterItems()});return}
+    loadOff().then(r=>{if(!r){l.disabled=false;l.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}S.iext="off";S.imore=false;filterItems()});return}
   const d=e.target.closest("#isug [data-sugdb],#isug [data-sugoff]");if(d){const off=d.matches("[data-sugoff]"),f=off?offByCode(d.dataset.sugoff):dbFood(d.dataset.sugdb);if(f)fillNewItem(f,off?"off":"lv")}});
 $("iedit").addEventListener("input",e=>{if(e.target.classList&&e.target.classList.contains("pre"))e.target.classList.remove("pre")});
 $("iedit").addEventListener("input",e=>{if(e.target.closest("#newitem")&&e.target.matches('[data-f="name"]'))S.iAuto=e.target.value===(S.iAutoVal||"")});
@@ -1230,7 +1233,7 @@ $("entries").addEventListener("input",e=>{
   const box=inp.parentElement.querySelector("[data-gsug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
   const m=S.items.filter(it=>hit(it.name,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
-  box.innerHTML=m.map(it=>`<button type="button" data-gsugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=""):inp.dataset.ext)+(exact?"":`<button type="button" class="mk" data-gsugnew><span>Add “${esc(q)}” as a new item</span></button>`);
+  box.innerHTML=m.map(it=>`<button type="button" data-gsugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-gsugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))});
   box.hidden=false});
 $("entries").addEventListener("change",e=>{const id=gidOf(e.target);if(!id)return;const t=e.target,v=Number(t.value);
@@ -1252,7 +1255,7 @@ $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]
   const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
   const m=S.items.filter(it=>hit(it.name,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
-  box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=""):inp.dataset.ext)+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
+  box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   box.hidden=false;if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))})});
 $("pedit").addEventListener("click",e=>{if(sugExtClick(e))return;const b=e.target.closest("[data-sugi],[data-sugnew],[data-sugdb],[data-sugoff]");if(!b)return;
   const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),box=pad.querySelector("[data-psug]");
