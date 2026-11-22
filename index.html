@@ -230,6 +230,26 @@ body.hasclip .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .iedit input.pre{background:var(--accent-soft)}
 .newrow input.pre{background:var(--accent-soft)}
 .psug .dbh{padding:8px 10px 4px}
+.mcount{font-weight:500;color:var(--ink-soft);font-size:13px}
+.mintro{font-size:12px;color:var(--ink-soft);margin:8px 0 4px}
+.mlist{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.mlist .seg{align-self:flex-start;margin-bottom:2px}
+.mc{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.mc .m1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.mc .m1 b{font-weight:600}
+.mc .m1 .num{font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.mc .m2{font-size:14px;color:var(--ink)}
+.mc .m3{font-size:13px;color:var(--ink-soft)}
+.mc .m3 b{color:var(--ink)}
+.mc .mk{font-size:12px;color:var(--muted)}
+.mc .mwarn{font-size:12px;color:var(--over)}
+.mc .mb{display:flex;gap:6px;justify-content:flex-end;margin-top:4px;flex-wrap:wrap}
+.mc .mb button{padding:5px 12px;font-size:13px}.mc .mb .primary{padding:5px 18px;font-size:14px}
+.mc .m2 .num{white-space:nowrap}
+.mc .msrch{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.mc .msrch input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;font-size:16px;min-width:0}
+.mmeal{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px;background:var(--accent-soft);border-radius:10px;padding:8px 10px}
+.mall{align-self:stretch;margin-top:4px}
 .src{display:inline-block;font-size:10px;font-weight:700;color:var(--ink-soft);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-left:4px;vertical-align:1px}
 .padd{display:flex;flex-direction:column;gap:6px}
 .psug{background:var(--paper);border:1px solid var(--line);border-radius:10px;max-height:220px;overflow-y:auto;overscroll-behavior:contain}
@@ -472,6 +492,12 @@ summary{cursor:pointer;font-weight:600}
     <summary>Edit regular items</summary>
     <input class="srch esrch" id="isrch" type="search" placeholder="Search regular items" aria-label="Search regular items to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="iedit" id="iedit"></div>
+  </details>
+
+  <details id="matchbox" class="edit-only">
+    <summary>Nutrients from food databases <span class="mcount" id="mcount"></span></summary>
+    <div class="mintro">Suggested matches from Livsmedelsverket and Open Food Facts for regular items without nutrients. Use fills the empty nutrient fields, scaled to the item's own kcal. Kcal is never changed.</div>
+    <div class="mlist" id="mlist"></div>
   </details>
 
   <details class="edit-only">
@@ -754,23 +780,24 @@ const sfold=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u0
 // ---- Livsmedelsverket food database (foods.json, CC BY 4.0), loaded the first time a search needs it.
 function loadFoods(){if(S.foods)return Promise.resolve(S.foods);if(S.foodsP)return S.foodsP;
   S.foodsP=fetch("foods.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{
-    S.foods=(d.rows||[]).map(r=>({id:r[0],name:r[1],kcal:r[2],p:r[3],f:r[4],c:r[5],fib:r[6],k:sfold(r[1]),dish:/ m\. /.test(String(r[1]).toLowerCase())}));return S.foods})
+    S.foods=(d.rows||[]).map(r=>({id:r[0],name:r[1],kcal:r[2],p:r[3],f:r[4],c:r[5],fib:r[6],k:sfold(r[1]),dish:/ m\. /.test(String(r[1]).toLowerCase())}));S.lvMap=new Map(S.foods.map(f=>[String(f.id),f]));return S.foods})
     .catch(()=>{S.foodsP=null;return null});return S.foodsP}
 // Matches for a search, best first: names whose first word is the first search word, then names that start with it, then words that start with it; plain foods before dishes ("… m. …"), shorter names first.
-// Foods you already have as a regular item (linked, or with the same name) are left out.
-function dbFind(q){const t=sfold(q);if(!S.foods||t.replace(/ /g,"").length<3)return [];
-  const toks=t.split(" ").filter(Boolean),w0=toks[0],have=new Set(S.items.map(i=>i.lv).filter(v=>v!=null).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
+// Foods you already have as a regular item (linked, or with the same name) are left out, unless all is set (matching items in Edit).
+// A linked item shows up for its food's name instead (itemHit).
+function dbFind(q,all){const t=sfold(q);if(!S.foods||t.replace(/ /g,"").length<3)return [];
+  const toks=t.split(" ").filter(Boolean),w0=toks[0],have=new Set(all?[]:S.items.map(i=>i.lv).filter(v=>v!=null).map(String)),names=new Set(all?[]:S.items.map(i=>sfold(i.name)));
   const m=[];for(const f of S.foods){if(have.has(String(f.id))||names.has(f.k)||!toks.every(x=>f.k.includes(x)))continue;
     const ws=f.k.split(/[ ,.()]+/),sc=(ws[0]===w0?0:f.k.startsWith(w0)?0.3:ws.some(w=>w.startsWith(w0))?1:2)+(f.dish?0.5:0);m.push([sc,f.k.length,f])}
   m.sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2].k.localeCompare(b[2].k,"sv"));return m.map(x=>x[2])}
-const dbFood=id=>S.foods&&S.foods.find(f=>String(f.id)===String(id));
+const dbFood=id=>S.lvMap?S.lvMap.get(String(id)):undefined;
 // ---- Open Food Facts: products sold in Sweden (products-se.json, ODbL), copied monthly by the same GitHub job as foods.json.
 // Loaded the first time you tap Search Open Food Facts, then searched on the phone, also offline.
 const liquidRe=/\d\s*(ml|cl|l|liter|litre)\b/i;
 function loadOff(){if(S.offFoods)return Promise.resolve(S.offFoods);if(S.offP)return S.offP;
   S.offP=fetch("products-se.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{
     S.offFoods=(d.rows||[]).map(r=>{const [code,name,brand,qty,liq,kcal,p,f,c,fib]=r,full=brand&&!sfold(name).includes(sfold(brand))?`${name} (${brand})`:name;
-      return {code:String(code),name,brand,qty,mode:liq||liquidRe.test(qty)||/dryck\b|drink\b/i.test(name)?"dl":"g",kcal,p,f,c,fib,full,k:sfold(name+" "+brand),kn:sfold(name)}});return S.offFoods})
+      return {code:String(code),name,brand,qty,mode:liq||liquidRe.test(qty)||/dryck\b|drink\b/i.test(name)?"dl":"g",kcal,p,f,c,fib,full,k:sfold(name+" "+brand),kn:sfold(name)}});S.offMap=new Map(S.offFoods.map(f=>[f.code,f]));return S.offFoods})
     .catch(()=>{S.offP=null;return null});return S.offP}
 // Best first, as for Livsmedelsverket: product names whose first word is the first search word, then names starting with it, then any word; shorter names first.
 function offFind(q){const t=sfold(q);if(!S.offFoods||t.replace(/ /g,"").length<3)return [];const toks=t.split(" ").filter(Boolean),w0=toks[0],m=[];
@@ -783,12 +810,15 @@ async function offSearch(q){const key=sfold(q);S.ext="off";
 // Products already saved as a regular item (by barcode or by name) are left out.
 const offShown=()=>{if(!S.off||S.off.status!=="ok")return [];const have=new Set(S.items.map(i=>i.off).filter(Boolean).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
   return S.off.list.filter(m=>!have.has(m.code)&&!names.has(sfold(m.full)))};
-const offByCode=code=>S.offFoods&&S.offFoods.find(m=>m.code===String(code));
-function offAvail(q){if(!S.offFoods)return null;const codes=new Set(S.items.map(i=>i.off).filter(Boolean).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
+const offByCode=code=>S.offMap?S.offMap.get(String(code)):undefined;
+function offAvail(q,all){if(!S.offFoods)return null;if(all)return offFind(q);const codes=new Set(S.items.map(i=>i.off).filter(Boolean).map(String)),names=new Set(S.items.map(i=>sfold(i.name)));
   return offFind(q).filter(m=>!codes.has(m.code)&&!names.has(sfold(m.full)))}
+// A regular item matches a search by its own name, or by words in the name of the database food it is linked to ("ägg" finds Boiled egg once it is linked to Ägg kokt).
+const linkK=it=>{const f=it.lv!=null?dbFood(it.lv):it.off?offByCode(it.off):null;return f?f.k:""};
+const itemHit=(it,toks)=>{if(hit(it.name,toks))return true;const k=linkK(it);if(!k)return false;const ws=k.split(/[ ,.()%-]+/);return toks.every(t=>ws.some(w=>w.startsWith(t)))};
 // The database part of a suggestion box. Livsmedelsverket and Open Food Facts share one slot of three results; the other folds into one line.
-function extSugHtml(q,ext,more){if(sfold(q).replace(/ /g,"").length<3)return "";
-  const lv=dbFind(q),off=offAvail(q),useOff=!!(off&&off.length&&(ext==="off"||!lv.length));let h="";
+function extSugHtml(q,ext,more,all){if(sfold(q).replace(/ /g,"").length<3)return "";
+  const lv=dbFind(q,all),off=offAvail(q,all),useOff=!!(off&&off.length&&(ext==="off"||!lv.length));let h="";
   const fold=(src,lab)=>`<button type="button" class="sf" data-sugext="${src}"><span>${lab}</span><b>Show</b></button>`;
   const nL=more?15:3,nO=more?12:3,moreB=(shown,all,max)=>all>shown&&shown<max?`<button type="button" class="sf" data-sugmore><span>Show ${Math.min(max,all)-shown} more</span></button>`:"";
   if(!useOff){if(lv.length)h+=`<div class="dbh"><span>From Livsmedelsverket</span><span>${Math.min(nL,lv.length)} of ${lv.length}</span></div>`+lv.slice(0,nL).map(f=>`<button type="button" data-sugdb="${esc(f.id)}"><span>${esc(f.name)}</span><small class="num">${dbLab(f)}</small></button>`).join("")+moreB(Math.min(nL,lv.length),lv.length,15);
@@ -890,7 +920,7 @@ function renderPick(){
   const box=$("picklist"),ae=document.activeElement;
   if(ae&&ae.classList&&ae.classList.contains("pin")&&box.contains(ae)){pickSum();return}
   const toks=sfold(S.q).split(" ").filter(Boolean),searching=toks.length>0;
-  const items=searching?S.items.filter(it=>hit(it.name,toks)):S.items;
+  const items=searching?S.items.filter(it=>itemHit(it,toks)):S.items;
   const meals=searching?S.presets.filter(p=>hit(p.name,toks)):[];
   const top=box.scrollTop;
   const mrows=meals.map(p=>{const k=totalOf(p),dish=isDish(p);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>${dish?"+ 1 portion":"Add"}</button></div>`}).join("");
@@ -958,7 +988,7 @@ function renderItems(){
 // Search in Edit regular items: hides non-matching cards (the new-item card always stays). With no match, the typed text pre-fills the new item's name.
 function filterItems(){
   const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0;
-  $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks);c.hidden=!ok;if(ok)shown++});
+  $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const it=S.items.find(i=>i.id===c.dataset.iid);const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks)||(!!it&&itemHit(it,toks));c.hidden=!ok;if(ok)shown++});
   const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”. Add it below.`}
   const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"",!!S.imore);ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
   const nn=$("newitem")&&$("newitem").querySelector('[data-f="name"]');
@@ -1122,7 +1152,9 @@ $("iedit").addEventListener("change",e=>{const c=e.target.closest(".ic");if(!c)r
   if(e.target.matches('[data-f="mode"]')){const was=c.dataset.mode,m=e.target.value,inp=c.querySelector('[data-f="num"]');
     if((was==="piece")!==(m==="piece")){inp.value="";c.querySelectorAll("[data-n]").forEach(i=>i.value="")}syncItemCard(c);if(inp.value==="")inp.focus()}
   if(e.target.matches("[data-n]")){const s=c.querySelector("[data-nsum]"),o={};c.querySelectorAll("[data-n]").forEach(i=>{if(i.value!=="")o[i.dataset.n]=Number(i.value)});if(s)s.innerHTML=nutSum(o)}
-  if(!c.dataset.iid)return;const doc=readItemCard(c);if(!doc)return;const old=S.items.find(i=>i.id===c.dataset.iid);if(old&&old.lv!=null&&doc.mode==="g")doc.lv=old.lv;if(old&&old.off&&doc.mode)doc.off=old.off;
+  if(!c.dataset.iid)return;const doc=readItemCard(c);if(!doc)return;const old=S.items.find(i=>i.id===c.dataset.iid);
+  // A database link stays while the item has nutrients; fields the card doesn't show (like a skipped match) are kept.
+  if(old){if(hasNut(doc.nut)){if(old.lv!=null)doc.lv=old.lv;else if(old.off)doc.off=old.off}for(const k in old)if(!["id","name","mode","per100","usual","kcal","nut","lv","off"].includes(k))doc[k]=old[k]}
   S.itemsQuiet=true;write(()=>S.db.doc("items/"+c.dataset.iid).set(doc),"Saved")});
 S.inutOpen={};
 $("iedit").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.inut"))return;const c=d.closest(".ic");const k=c&&(c.dataset.iid||"new");if(k){if(d.open)S.inutOpen[k]=1;else delete S.inutOpen[k]}
@@ -1145,6 +1177,110 @@ $("iedit").addEventListener("click",e=>{
   const d=e.target.closest("#isug [data-sugdb],#isug [data-sugoff]");if(d){const off=d.matches("[data-sugoff]"),f=off?offByCode(d.dataset.sugoff):dbFood(d.dataset.sugdb);if(f)fillNewItem(f,off?"off":"lv")}});
 $("iedit").addEventListener("input",e=>{if(e.target.classList&&e.target.classList.contains("pre"))e.target.classList.remove("pre")});
 $("iedit").addEventListener("input",e=>{if(e.target.closest("#newitem")&&e.target.matches('[data-f="name"]'))S.iAuto=e.target.value===(S.iAutoVal||"")});
+// ---- Nutrients from food databases (Edit). matches.json holds suggested matches by item id (lv = Livsmedelsverket id, off = barcode).
+// Use fills the item's empty nutrient fields from the matched food, scaled by the item's kcal over the food's kcal, and links the item to it.
+S.mtab="review";S.mPick={};S.mOpen=null;S.mq="";S.mext="";S.mmore=false;
+function loadMatches(){if(S.msug)return Promise.resolve(S.msug);if(S.msugP)return S.msugP;
+  S.msugP=fetch("matches.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{S.msug=(d&&d.m)||{};return S.msug}).catch(()=>{S.msugP=null;return null});return S.msugP}
+const mFood=m=>!m?null:m.off?offByCode(m.off):m.lv!=null?dbFood(m.lv):null;
+// The match shown for an item: one picked here, else the suggested one
+const mSug=it=>{const m=S.mPick[it.id]||(S.msug&&S.msug[it.id]),f=mFood(m);return f?{m,f,src:m.off?"off":"lv"}:null};
+const mDone=it=>it.lv!=null||!!it.off||NK.every(k=>it.nut&&it.nut[k]!=null);
+// Weighed by mode, also with 0 kcal (salt, water)
+const mW=it=>it.mode==="g"||it.mode==="dl";
+const mLiq=/^(öl|vin|vatten|mjölk|filmjölk|havredryck)\b|dryck\b|juice\b/i;
+// Nutrients per piece / per 100 g / per dl for the item, from food f (per 100 g or 100 ml): f × item kcal ÷ food kcal.
+// A note when the kcal don't fit: weighed items more than about a third apart, or a piece whose name states a weight the kcal don't match.
+function mCalc(it,f){const base=mW(it)?Number(it.per100)||0:Number(it.kcal)||0,dk=Number(f.kcal)||0;
+  const x=dk>0?base/dk:(base===0&&mW(it)?1:null);if(x==null)return null;
+  const nut={};NK.forEach(k=>{if(f[k]!=null&&isFinite(f[k])){const v=Number(f[k])*x;nut[k]=v>=1?Math.round(v*10)/10:Math.round(v*100)/100}});
+  const unit=f.mode==="dl"||mLiq.test(f.name)||/\d\s?(cl|ml)\b/i.test(it.name)?"ml":"g";let w=null,note="";
+  if(!mW(it)&&dk>0){w=Math.round(x*100);const m=/(\d+(?:[.,]\d+)?)\s?(g|cl|ml)\b/i.exec(it.name);
+    if(m){const u=m[2].toLowerCase(),st=parseFloat(m[1].replace(",","."))*(u==="cl"?10:1),r=w/st;
+      if(st>0&&(r<0.75||r>1.33))note=`The name says ${fmtN(st)} ${u==="g"?"g":"ml"}. At this food's kcal, ${n(base)} kcal is about ${w} ${unit}.`}}
+  else if(mW(it)&&dk>0&&base>0&&(x<0.75||x>1.33))note=`Kcal differ: yours ${n(base)} per ${it.mode==="dl"?"dl":"100 g"}, this food ${n(dk)} per ${f.mode==="dl"?"100 ml":"100 g"}. The nutrients are scaled to your kcal.`;
+  return {nut,w,unit,note}}
+// Fill only empty fields; replace (changing the match of an item that has one) sets all from the new food.
+function mNewNut(it,c,replace){const r=replace?{}:{...(it.nut||{})};NK.forEach(k=>{if(r[k]==null&&c.nut[k]!=null)r[k]=c.nut[k]});return r}
+function mDoc(it,s,replace){const c=mCalc(it,s.f);if(!c)return null;const {id,mskip,lv,off,...rest}=it;const doc={...rest,nut:mNewNut(it,c,replace)};
+  if(s.src==="off")doc.off=String(s.m.off);else doc.lv=isNaN(Number(s.m.lv))?s.m.lv:Number(s.m.lv);return doc}
+const mBasis=it=>mW(it)?`${n(Number(it.per100)||0)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal each`;
+const mPer=it=>mW(it)?(it.mode==="g"?"per 100 g":"per dl"):"each";
+const mG=v=>v==null?"–":fmtG(v);
+const mNutHtml=o=>`<b>P ${mG(o.p)} g</b> · fibre ${mG(o.fib)} g · fat ${mG(o.f)} g · carbs ${mG(o.c)} g`;
+const mNK={p:"protein",fib:"fibre",f:"fat",c:"carbs"};
+const mFoodName=s=>esc(s.src==="off"?s.f.full:s.f.name)+`<span class="src">${s.src==="off"?"Open Food Facts":"Livsmedelsverket"}</span>`;
+// Items sorted into the three tabs by their suggestion from matches.json (a match picked here doesn't move an item between tabs)
+function mGroups(){const g={review:[],done:[],none:[]};
+  for(const it of S.items){if(mDone(it)){g.done.push(it);continue}const f=S.msug&&mFood(S.msug[it.id]);(f&&!it.mskip?g.review:g.none).push(it)}return g}
+// Regular-meal ingredients without nutrients whose item now has them. Amount from the ingredient's kcal over the item's kcal per unit,
+// or from the amount when the item has 0 kcal (salt, water).
+function mMealFills(){const by=new Map();S.items.forEach(it=>{if(hasNut(it.nut))by.set(sfold(it.name),it)});const out=[];
+  for(const p of S.presets){let cnt=0;const items=(p.items||[]).map(ing=>{if(hasNut(ing.nut))return ing;let a=splitQty(ing.food),it=by.get(sfold(a.name));if(!it){a={q:1,unit:"",name:ing.food};it=by.get(sfold(ing.food))}if(!it)return ing;
+      const w=mW(it),pu=w?(Number(it.per100)||0)/(it.mode==="g"?100:1):Number(it.kcal)||0,k=Number(ing.kcal)||0,same=w?a.unit===it.mode:a.unit==="";
+      const u=pu>0?k/pu:same?a.q:null;if(u==null||!isFinite(u))return ing;
+      const nut=nutMul(nutMul(it.nut,w&&it.mode==="g"?0.01:1,false),u);if(!hasNut(nut))return ing;cnt++;return {...ing,nut}});
+    if(cnt)out.push({p,items,cnt})}return out}
+function renderMatchCount(){const el=$("mcount");if(!el)return;if(!S.msug){el.textContent="";return}
+  const k=S.items.filter(it=>!mDone(it)&&!it.mskip&&S.msug[it.id]).length;el.textContent=k?`· ${k} to review`:""}
+function mSugBox(){const q=S.mq.trim();if(sfold(q).replace(/ /g,"").length<3)return "";return extSugHtml(q,S.mext,S.mmore,true)||`<div class="nomatch">No food matches “${esc(q)}”.</div>`}
+const mSearch=()=>`<div class="msrch"><input type="search" data-msrch value="${esc(S.mq)}" placeholder="Search Livsmedelsverket and Open Food Facts" aria-label="Search the food databases" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><div class="psug" data-msug${mSugBox()?"":" hidden"}>${mSugBox()}</div></div>`;
+// One card. With a match to show: what Use fills. Otherwise the item's state and Find match.
+function mCard(it,tab){const id=esc(it.id),open=S.mOpen===it.id,picked=!!S.mPick[it.id],done=tab==="done";
+  const head=`<div class="m1"><b>${esc(it.name)}</b><span class="num">${mBasis(it)}</span></div>`;
+  const s=(tab==="review"||picked)?mSug(it):null;
+  if(s){const c=mCalc(it,s.f),fill=c&&mNewNut(it,c,done),kept=!done&&it.nut?NK.filter(k=>it.nut[k]!=null):[];
+    return `<div class="mc" data-mid="${id}">${head}
+      <div class="m2">→ ${mFoodName(s)} <span class="mk num">${n(s.f.kcal)} kcal / ${s.f.mode==="dl"?"100 ml":"100 g"}</span></div>
+      ${c?`<div class="m3">${done?"Sets":"Fills"} ${mPer(it)}${c.w!=null?` (≈ ${c.w} ${c.unit})`:""}: ${mNutHtml(fill)}</div>${kept.length?`<div class="mk">Keeps your ${kept.map(k=>mNK[k]).join(", ")}.</div>`:""}`:`<div class="mk">This food has no kcal to scale from.</div>`}
+      ${c&&c.note?`<div class="mwarn">Check: ${c.note}</div>`:""}
+      <div class="mb">${picked?`<button class="ghost" type="button" data-mcancel>Cancel</button>`:`<button class="ghost" type="button" data-mskip>Skip</button>`}<button class="ghost" type="button" data-mfind>${open?"Close search":"Other match"}</button><button class="primary" type="button" data-muse ${c&&S.canWrite?"":"disabled"}>${done?"Replace":"Use"}</button></div>
+      ${open?mSearch():""}</div>`}
+  if(done){const f=it.lv!=null?dbFood(it.lv):it.off?offByCode(it.off):null;
+    return `<div class="mc" data-mid="${id}">${head}
+      <div class="m2">${f?`→ ${mFoodName({f,src:it.off?"off":"lv"})}`:`<span class="mk">${it.lv!=null||it.off?"Linked food no longer in the database":"Typed in"}</span>`}</div>
+      <div class="m3">${mPer(it)[0].toUpperCase()+mPer(it).slice(1)}: ${mNutHtml(it.nut||{})}</div>
+      <div class="mb"><button class="ghost" type="button" data-mfind>${open?"Close search":"Change match"}</button></div>${open?mSearch():""}</div>`}
+  const sug=S.msug&&mFood(S.msug[it.id]);
+  return `<div class="mc" data-mid="${id}">${head}<div class="m2 mk">${it.mskip?"Skipped":"No suggestion"}</div>
+    <div class="mb">${it.mskip&&sug?`<button class="ghost" type="button" data-munskip>Back to review</button>`:""}<button class="ghost" type="button" data-mfind>${open?"Close search":"Find match"}</button></div>${open?mSearch():""}</div>`}
+function renderMatch(){renderMatchCount();const box=$("mlist");if(!box||!$("matchbox").open)return;
+  if(!S.foods||!S.offFoods||!S.msug){box.innerHTML=`<div class="nomatch">${S.mload==="error"?"Couldn't load the food data. Close and open this section to try again.":"Loading food data (once, about 0.7 MB)…"}</div>`;return}
+  const g=mGroups(),t=S.mtab,list=g[t],meals=mMealFills(),mi=meals.reduce((a,x)=>a+x.cnt,0);
+  let h=`<div class="seg" role="group" aria-label="Show">${[["review","To review"],["done","Done"],["none","No match"]].map(([k,l])=>`<button type="button" data-mt="${k}" aria-pressed="${t===k}">${l} ${g[k].length}</button>`).join("")}</div>`;
+  if(mi)h+=`<div class="mmeal"><span>${mi} ingredient${mi===1?"":"s"} in ${meals.length} regular meal${meals.length===1?"":"s"} can get nutrients from matched items.</span><button class="primary" type="button" data-mmeals ${S.canWrite?"":"disabled"}>Fill</button></div>`;
+  h+=list.map(it=>mCard(it,t)).join("")||`<div class="nomatch">${t==="review"?"Nothing left to review.":t==="done"?"No items with nutrients yet.":"No items here."}</div>`;
+  if(t==="review"&&list.length>1){const ok=mAllOk(list).length,chk=list.length-ok;
+    if(ok)h+=`<button class="ghost mall" type="button" data-mall ${S.canWrite?"":"disabled"}>${chk?`Use all except the ${chk} marked Check`:`Use all ${ok}`}</button>`}
+  box.innerHTML=h;
+  if(S.mOpen){const i=box.querySelector("[data-msrch]");if(i&&S.mFocus){S.mFocus=false;i.focus();i.select()}}}
+const mAllOk=list=>list.filter(it=>{const s=mSug(it),c=s&&mCalc(it,s.f);return c&&!c.note});
+const mRedraw=()=>{const a=document.activeElement;if(a&&a.matches&&a.matches("[data-msrch]"))renderMatchCount();else renderMatch()};
+function mUse(id){const it=S.items.find(i=>i.id===id),s=it&&mSug(it);if(!s)return;const done=mDone(it),doc=mDoc(it,s,done);if(!doc)return;
+  delete S.mPick[id];S.mOpen=null;write(()=>S.db.doc("items/"+id).set(doc),`${done?"Replaced":"Filled"} nutrients for ${it.name}`)}
+$("matchbox").addEventListener("toggle",()=>{if(!$("matchbox").open)return;renderMatch();if(S.foods&&S.offFoods&&S.msug)return;S.mload="";
+  Promise.all([loadFoods(),loadOff(),loadMatches()]).then(r=>{S.mload=r.every(Boolean)?"ok":"error";renderMatch()})});
+$("mlist").addEventListener("input",e=>{const i=e.target.closest("[data-msrch]");if(!i)return;S.mq=i.value;S.mext="";S.mmore=false;const b=i.parentElement.querySelector("[data-msug]");const h=mSugBox();b.innerHTML=h;b.hidden=!h});
+$("mlist").addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;const card=t.closest("[data-mid]"),id=card&&card.dataset.mid;
+  if(t.matches("[data-mt]")){S.mtab=t.dataset.mt;S.mOpen=null;renderMatch();return}
+  if(t.matches("[data-mmeals]")){const fills=mMealFills(),k=fills.reduce((a,x)=>a+x.cnt,0);if(!k)return;S.forcePresets=true;
+    write(async()=>{for(const {p,items} of fills){const {id:_,...rest}=p;await S.db.doc("presets/"+p.id).set({...rest,items})}},`Filled nutrients for ${k} ingredient${k===1?"":"s"} in ${fills.length} regular meal${fills.length===1?"":"s"}`);return}
+  if(t.matches("[data-mall]")){const docs=mAllOk(mGroups().review).map(it=>[it.id,mDoc(it,mSug(it),false)]).filter(x=>x[1]);if(!docs.length)return;docs.forEach(([i])=>delete S.mPick[i]);S.mOpen=null;
+    write(async()=>{for(const [i,doc] of docs)await S.db.doc("items/"+i).set(doc)},`Filled nutrients for ${docs.length} item${docs.length===1?"":"s"}`);return}
+  const box=t.closest(".psug");
+  if(box){if(t.matches("[data-sugext]")){S.mext=t.dataset.sugext;S.mmore=false;box.innerHTML=mSugBox();return}
+    if(t.matches("[data-sugmore]")){const top=box.scrollTop;S.mmore=true;box.innerHTML=mSugBox();box.scrollTop=top;return}
+    if(t.matches("[data-sugoffload]")){t.disabled=true;loadOff().then(r=>{if(!r){t.disabled=false;return}S.mext="off";box.innerHTML=mSugBox()});return}
+    if(t.matches("[data-sugdb],[data-sugoff]")&&id){S.mPick[id]=t.matches("[data-sugoff]")?{off:t.dataset.sugoff}:{lv:isNaN(Number(t.dataset.sugdb))?t.dataset.sugdb:Number(t.dataset.sugdb)};
+      S.mOpen=null;S.mq="";renderMatch();return}
+    return}
+  if(!id)return;const it=S.items.find(i=>i.id===id);if(!it)return;
+  if(t.matches("[data-muse]")){mUse(id);return}
+  if(t.matches("[data-mcancel]")){delete S.mPick[id];S.mOpen=null;renderMatch();return}
+  if(t.matches("[data-mfind]")){if(S.mOpen===id){S.mOpen=null;renderMatch();return}
+    const s=mSug(it),f=s&&s.f;S.mOpen=id;S.mq=f?String(f.name).split(/[ ,]/)[0]:it.name;S.mext=s&&s.src==="off"?"off":"";S.mmore=false;S.mFocus=true;renderMatch();return}
+  if(t.matches("[data-mskip]")){const {id:_,...rest}=it;write(()=>S.db.doc("items/"+id).set({...rest,mskip:true}),`Skipped ${it.name}`);return}
+  if(t.matches("[data-munskip]")){const {id:_,mskip,...rest}=it;write(()=>S.db.doc("items/"+id).set(rest),`${it.name} is back in To review`)}});
 $("psrch2").addEventListener("input",e=>{S.pq=e.target.value;filterPresets()});
 $("iedit").addEventListener("click",e=>{
   if(e.target.matches("[data-iadd]")){const doc=readItemCard($("newitem"));
@@ -1232,7 +1368,7 @@ $("entries").addEventListener("input",e=>{
   const inp=e.target.closest("[data-gsrch]");if(!inp)return;
   const box=inp.parentElement.querySelector("[data-gsug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
-  const m=S.items.filter(it=>hit(it.name,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
+  const m=S.items.filter(it=>itemHit(it,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
   box.innerHTML=m.map(it=>`<button type="button" data-gsugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-gsugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))});
   box.hidden=false});
@@ -1254,7 +1390,7 @@ function presetRow(food,kcal,nut){const w=document.createElement("div");
 $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]");if(!inp)return;
   const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
-  const m=S.items.filter(it=>hit(it.name,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
+  const m=S.items.filter(it=>itemHit(it,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
   box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   box.hidden=false;if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))})});
 $("pedit").addEventListener("click",e=>{if(sugExtClick(e))return;const b=e.target.closest("[data-sugi],[data-sugnew],[data-sugdb],[data-sugoff]");if(!b)return;
@@ -1404,7 +1540,7 @@ function startLog(db){
     const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
     // Re-draw the editor only when the saved meals changed, so unsaved edits survive unrelated writes.
     const sig=JSON.stringify(S.presets);
-    if(S.forcePresets||(sig!==S.presetSig&&!typing)){S.forcePresets=false;S.presetSig=sig;renderPresets()}render()},onErr);
+    if(S.forcePresets||(sig!==S.presetSig&&!typing)){S.forcePresets=false;S.presetSig=sig;renderPresets()}mRedraw();render()},onErr);
   db.collection("pots").onSnapshot(s=>{S.pots=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sfold(a.name).localeCompare(sfold(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("potedit").contains(a)&&a.tagName==="INPUT";
     const sig=JSON.stringify(S.pots),changed=sig!==S.potSig;
@@ -1415,7 +1551,7 @@ function startLog(db){
     const sig=JSON.stringify(S.items);
     // A save from an item card leaves the cards as they are: they already show what was saved, and redrawing would drop focus.
     if(S.itemsQuiet&&!S.forceItems){S.itemsQuiet=false;S.itemSig=sig}
-    else if(S.forceItems||(sig!==S.itemSig&&!typing)){S.forceItems=false;S.itemSig=sig;renderItems()}render()},onErr);
+    else if(S.forceItems||(sig!==S.itemSig&&!typing)){S.forceItems=false;S.itemSig=sig;renderItems()}mRedraw();render()},onErr);
   db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render();renderWeight()},onErr);
 }
 
@@ -1446,6 +1582,8 @@ if(!(window.claude&&window.claude.use)&&"serviceWorker" in navigator&&/^https?:$
     }).catch(()=>{});
   });
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(_){}
+  // The suggested matches are small (a few kB); loaded now so Edit can show how many are left to review.
+  loadMatches().then(renderMatchCount);
 }
 
 (async()=>{

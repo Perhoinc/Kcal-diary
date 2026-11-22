@@ -19,3 +19,5 @@ The app works offline. Before pushing any change to a file, bump `VERSION` in `s
 `products-se.json` holds the products sold in Sweden from Open Food Facts (openfoodfacts.org), with name, brand, pack size and kcal, protein, fat, carbohydrates and fibre per 100 g (per 100 ml for drinks). It is a derived database of Open Food Facts and is available under the Open Database License (ODbL).
 
 Both are fetched by `tools/fetch_foods.py` and `tools/fetch_off.py`, which GitHub runs from `.github/workflows/foods.yml` on the 1st of each month, whenever those files change, or by hand from the Actions tab (Update food database › Run workflow). `tools/foods-log.txt` and `tools/off-log.txt` show what the last run did.
+
+`matches.json` lists suggested database matches for the regular items in the log, by item id only (a Livsmedelsverket food id or an Open Food Facts barcode). Edit › Nutrients from food databases shows them for review.
