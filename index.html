@@ -817,21 +817,23 @@ function offAvail(q,all){if(!S.offFoods)return null;if(all)return offFind(q);con
 const linkK=it=>{const f=it.lv!=null?dbFood(it.lv):it.off?offByCode(it.off):null;return f?f.k:""};
 const itemHit=(it,toks)=>{if(hit(it.name,toks))return true;const k=linkK(it);if(!k)return false;const ws=k.split(/[ ,.()%-]+/);return toks.every(t=>ws.some(w=>w.startsWith(t)))};
 // The database part of a suggestion box. Livsmedelsverket and Open Food Facts share one slot of three results; the other folds into one line.
+// more counts the Show more taps: each shows 12 more, until all results are shown.
+const MORE=12,moreN=k=>3+MORE*(Number(k)||0);
 function extSugHtml(q,ext,more,all){if(sfold(q).replace(/ /g,"").length<3)return "";
   const lv=dbFind(q,all),off=offAvail(q,all),useOff=!!(off&&off.length&&(ext==="off"||!lv.length));let h="";
   const fold=(src,lab)=>`<button type="button" class="sf" data-sugext="${src}"><span>${lab}</span><b>Show</b></button>`;
-  const nL=more?15:3,nO=more?12:3,moreB=(shown,all,max)=>all>shown&&shown<max?`<button type="button" class="sf" data-sugmore><span>Show ${Math.min(max,all)-shown} more</span></button>`:"";
-  if(!useOff){if(lv.length)h+=`<div class="dbh"><span>From Livsmedelsverket</span><span>${Math.min(nL,lv.length)} of ${lv.length}</span></div>`+lv.slice(0,nL).map(f=>`<button type="button" data-sugdb="${esc(f.id)}"><span>${esc(f.name)}</span><small class="num">${dbLab(f)}</small></button>`).join("")+moreB(Math.min(nL,lv.length),lv.length,15);
+  const nL=moreN(more),nO=nL,moreB=(shown,all)=>all>shown?`<button type="button" class="sf" data-sugmore><span>Show ${Math.min(MORE,all-shown)} more</span></button>`:"";
+  if(!useOff){if(lv.length)h+=`<div class="dbh"><span>From Livsmedelsverket</span><span>${Math.min(nL,lv.length)} of ${lv.length}</span></div>`+lv.slice(0,nL).map(f=>`<button type="button" data-sugdb="${esc(f.id)}"><span>${esc(f.name)}</span><small class="num">${dbLab(f)}</small></button>`).join("")+moreB(Math.min(nL,lv.length),lv.length);
     if(off){if(off.length)h+=fold("off",`Open Food Facts · ${off.length} product${off.length===1?"":"s"}`)}
     else h+=`<button type="button" class="mk" data-sugoffload><span>Search Open Food Facts for “${esc(q.trim())}”</span></button>`}
   else{if(lv.length)h+=fold("lv",`Livsmedelsverket · ${lv.length} match${lv.length===1?"":"es"}`);
-    h+=`<div class="dbh"><span>From Open Food Facts</span><span>${Math.min(nO,off.length)} of ${off.length}</span></div>`+off.slice(0,nO).map(m=>`<button type="button" data-sugoff="${esc(m.code)}"><span>${esc(m.name)}<small class="ob">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</small></span><small class="num">${offLab(m)}</small></button>`).join("")+moreB(Math.min(nO,off.length),off.length,12)}
+    h+=`<div class="dbh"><span>From Open Food Facts</span><span>${Math.min(nO,off.length)} of ${off.length}</span></div>`+off.slice(0,nO).map(m=>`<button type="button" data-sugoff="${esc(m.code)}"><span>${esc(m.name)}<small class="ob">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</small></span><small class="num">${offLab(m)}</small></button>`).join("")+moreB(Math.min(nO,off.length),off.length)}
   return h}
 // Fold lines and the first Open Food Facts load inside a suggestion box (regular meals and opened meal rows)
 function sugExtClick(e){const b=e.target.closest(".padd [data-sugext],.padd [data-sugoffload],.padd [data-sugmore],.gadd [data-sugext],.gadd [data-sugoffload],.gadd [data-sugmore]");if(!b)return false;
   const inp=b.closest(".padd,.gadd").querySelector("[data-psrch],[data-gsrch]");if(!inp)return false;
   const again=()=>inp.dispatchEvent(new Event("input",{bubbles:true}));
-  if(b.matches("[data-sugmore]")){inp.dataset.more="1";const bx=b.closest(".psug"),top=bx.scrollTop;again();bx.scrollTop=top;return true}
+  if(b.matches("[data-sugmore]")){inp.dataset.more=String((Number(inp.dataset.more)||0)+1);const bx=b.closest(".psug"),top=bx.scrollTop;again();bx.scrollTop=top;return true}
   if(b.matches("[data-sugext]")){inp.dataset.ext=b.dataset.sugext;inp.dataset.more="";again();return true}
   b.disabled=true;b.querySelector("span").textContent="Loading Open Food Facts' products (once, about 0.6 MB)…";
   loadOff().then(r=>{if(!r){b.disabled=false;b.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}inp.dataset.ext="off";inp.dataset.more="";again()});return true}
@@ -940,21 +942,21 @@ function renderPick(){
     // Open Food Facts opens by itself when Livsmedelsverket has nothing for the search.
     const offHere=S.off&&S.off.q===key?S.off:null,ext=offHere&&(S.ext==="off"||(!db.length&&offHere.status==="ok"&&offShown().length))?"off":"lv";
     const lvFold=db.length?`<button class="dbfold" type="button" data-ext="lv"><span>Livsmedelsverket · ${db.length} match${db.length===1?"":"es"}</span><b>Show</b></button>`:"";
-    if(ext==="lv"){const show=db.slice(0,S.dbMore?15:3);
+    if(ext==="lv"){const show=db.slice(0,moreN(S.dbMore));
       if(db.length)drows=`<div class="dbh"><span>From Livsmedelsverket</span><span>${show.length} of ${db.length}</span></div>`+
         show.map(f=>`<div class="prow db" data-dbid="${esc(f.id)}"><button class="pname" type="button" data-dbpick>${esc(f.name)}<span class="sub">${dbLab(f)}</span></button><span></span><button class="addw" type="button" data-dbpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")+
-        (db.length>show.length&&show.length<15?`<button class="dbmore" type="button" data-dbmore>Show ${Math.min(15,db.length)-show.length} more</button>`:"");
+        (db.length>show.length?`<button class="dbmore" type="button" data-dbmore>Show ${Math.min(MORE,db.length-show.length)} more</button>`:"");
       // Once the products are on the phone, the count shows straight away, still folded.
       if(S.offFoods&&!(offHere&&offHere.status==="ok")){S.off={q:key,status:"ok",list:offFind(S.q)}}
       const oh=S.off&&S.off.q===key&&S.off.status==="ok"?S.off:null;
       if(oh){const k=offShown().length;if(k)drows+=`<button class="dbfold" type="button" data-ext="off"><span>Open Food Facts · ${k} product${k===1?"":"s"}</span><b>Show</b></button>`}
       else drows+=`<button class="dbmore" type="button" data-offsearch>Search Open Food Facts for “${esc(S.q.trim())}”</button>`}
-    else{drows=lvFold+`<div class="dbh"><span>From Open Food Facts</span><span>${offHere.status==="ok"?`${Math.min(offShown().length,S.offMore?12:3)} of ${offShown().length}`:""}</span></div>`;
+    else{drows=lvFold+`<div class="dbh"><span>From Open Food Facts</span><span>${offHere.status==="ok"?`${Math.min(offShown().length,moreN(S.offMore))} of ${offShown().length}`:""}</span></div>`;
       if(offHere.status==="loading")drows+=`<div class="dbmsg">Loading Open Food Facts' products (once, about 0.6 MB)…</div>`;
       else if(offHere.status==="error")drows+=`<div class="dbmsg">Couldn't load Open Food Facts' products. Check your connection and <button class="dbmore" type="button" data-offsearch style="display:inline;width:auto;padding:0">try again</button>.</div>`;
-      else{const all=offShown(),show=all.slice(0,S.offMore?12:3);
+      else{const all=offShown(),show=all.slice(0,moreN(S.offMore));
         drows+=show.length?show.map(m=>`<div class="prow db" data-offid="${esc(m.code)}"><button class="pname" type="button" data-offpick>${esc(m.name)}<span class="sub">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</span><span class="sub">${offLab(m)}</span></button><span></span><button class="addw" type="button" data-offpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")
-          +(all.length>show.length?`<button class="dbmore" type="button" data-offmore>Show ${Math.min(12,all.length)-show.length} more</button>`:"")
+          +(all.length>show.length?`<button class="dbmore" type="button" data-offmore>Show ${Math.min(MORE,all.length-show.length)} more</button>`:"")
           :`<div class="dbmsg">No product sold in Sweden matches on Open Food Facts.</div>`}}}
   box.innerHTML=(mrows+irows+drows)||(searching?`<div class="empty" style="padding:10px">No regular item or meal matches “${esc(S.q.trim())}”.</div>`:`<div class="empty" style="padding:10px">No regular items yet. Tap ⋯ then ☆ on a logged item to save one.</div>`);
   box.scrollTop=top;
@@ -990,7 +992,7 @@ function filterItems(){
   const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0;
   $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const it=S.items.find(i=>i.id===c.dataset.iid);const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks)||(!!it&&itemHit(it,toks));c.hidden=!ok;if(ok)shown++});
   const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”. Add it below.`}
-  const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"",!!S.imore);ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
+  const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"",S.imore||0);ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
   const nn=$("newitem")&&$("newitem").querySelector('[data-f="name"]');
   if(nn&&S.iAuto!==false){const want=toks.length&&shown===0?q:"";if(nn.value===(S.iAutoVal||"")||nn.value==="")nn.value=want;S.iAutoVal=want}
 }
@@ -1096,7 +1098,7 @@ $("picklist").addEventListener("input",e=>{const i=e.target.closest("[data-pin]"
 $("picklist").addEventListener("change",e=>{const i=e.target.closest("[data-pin]");if(!i)return;const id=i.closest("[data-pid]").dataset.pid,it=S.items.find(x=>x.id===id);const v=roundAmt(Number(i.value)||0,it?it.mode:"g");
   if(v>0)S.pick[id]=v;else delete S.pick[id];i.blur();renderPick()});
 $("picklist").addEventListener("keydown",e=>{if(e.target.matches("[data-pin]")&&e.key==="Enter"){e.preventDefault();e.target.blur()}});
-$("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;S.dbMore=false;S.offMore=false;S.ext="lv";if(S.dbPick)dbClear();renderPick();syncNew()});
+$("srch").addEventListener("input",e=>{S.q=e.target.value;S.nameAuto=true;S.dbMore=0;S.offMore=0;S.ext="lv";if(S.dbPick)dbClear();renderPick();syncNew()});
 // Picking a database food fills the new-item card (per 100 g); the shaded fields came from the database.
 function dbFill(f,src="lv"){S.dbPick={...f,src};S.nameAuto=false;S.nmode=f.mode||"g";$("nname").value=src==="off"?f.full:f.name;
   $("ndb").textContent=`Shaded fields came from ${src==="off"?"Open Food Facts":"Livsmedelsverket"}. Change them if your package says otherwise.`;$("nkcal").value=f.kcal;$("np").value=f.p??"";$("nfib").value=f.fib??"";$("namt").value="";
@@ -1105,8 +1107,8 @@ function dbFill(f,src="lv"){S.dbPick={...f,src};S.nameAuto=false;S.nmode=f.mode|
 function dbClear(){S.dbPick=null;["nkcal","np","nfib"].forEach(id=>$(id).classList.remove("pre"));$("ndb").hidden=true}
 for(const id of ["nkcal","np","nfib"])$(id).addEventListener("input",e=>e.target.classList.remove("pre"));
 $("picklist").addEventListener("click",e=>{
-  if(e.target.closest("[data-dbmore]")){S.dbMore=true;renderPick();return}
-  if(e.target.closest("[data-offmore]")){S.offMore=true;renderPick();return}
+  if(e.target.closest("[data-dbmore]")){S.dbMore=(S.dbMore||0)+1;renderPick();return}
+  if(e.target.closest("[data-offmore]")){S.offMore=(S.offMore||0)+1;renderPick();return}
   if(e.target.closest("[data-offsearch]")){offSearch(S.q);return}
   const ex=e.target.closest("[data-ext]");if(ex){S.ext=ex.dataset.ext;renderPick();return}
   const ob=e.target.closest("[data-offpick]");if(ob){if(!S.canWrite||!S.off)return;const m=S.off.list.find(x=>x.code===ob.closest("[data-offid]").dataset.offid);if(m)dbFill(m,"off");return}
@@ -1171,7 +1173,7 @@ function fillNewItem(f,src){const c=$("newitem");if(!c)return;const off=src==="o
   c.scrollIntoView({block:"center"});c.querySelector('[data-f="usual"]').focus()}
 $("iedit").addEventListener("click",e=>{
   const x=e.target.closest("#isug [data-sugext]");if(x){S.iext=x.dataset.sugext;S.imore=false;filterItems();return}
-  const mo=e.target.closest("#isug [data-sugmore]");if(mo){const top=$("isug").scrollTop;S.imore=true;filterItems();$("isug").scrollTop=top;return}
+  const mo=e.target.closest("#isug [data-sugmore]");if(mo){const top=$("isug").scrollTop;S.imore=(S.imore||0)+1;filterItems();$("isug").scrollTop=top;return}
   const l=e.target.closest("#isug [data-sugoffload]");if(l){l.disabled=true;l.querySelector("span").textContent="Loading Open Food Facts' products (once, about 0.6 MB)…";
     loadOff().then(r=>{if(!r){l.disabled=false;l.querySelector("span").textContent="Couldn't load Open Food Facts' products. Tap to try again.";return}S.iext="off";S.imore=false;filterItems()});return}
   const d=e.target.closest("#isug [data-sugdb],#isug [data-sugoff]");if(d){const off=d.matches("[data-sugoff]"),f=off?offByCode(d.dataset.sugoff):dbFood(d.dataset.sugdb);if(f)fillNewItem(f,off?"off":"lv")}});
@@ -1269,7 +1271,7 @@ $("mlist").addEventListener("click",e=>{const t=e.target.closest("button");if(!t
     write(async()=>{for(const [i,doc] of docs)await S.db.doc("items/"+i).set(doc)},`Filled nutrients for ${docs.length} item${docs.length===1?"":"s"}`);return}
   const box=t.closest(".psug");
   if(box){if(t.matches("[data-sugext]")){S.mext=t.dataset.sugext;S.mmore=false;box.innerHTML=mSugBox();return}
-    if(t.matches("[data-sugmore]")){const top=box.scrollTop;S.mmore=true;box.innerHTML=mSugBox();box.scrollTop=top;return}
+    if(t.matches("[data-sugmore]")){const top=box.scrollTop;S.mmore=(S.mmore||0)+1;box.innerHTML=mSugBox();box.scrollTop=top;return}
     if(t.matches("[data-sugoffload]")){t.disabled=true;loadOff().then(r=>{if(!r){t.disabled=false;return}S.mext="off";box.innerHTML=mSugBox()});return}
     if(t.matches("[data-sugdb],[data-sugoff]")&&id){S.mPick[id]=t.matches("[data-sugoff]")?{off:t.dataset.sugoff}:{lv:isNaN(Number(t.dataset.sugdb))?t.dataset.sugdb:Number(t.dataset.sugdb)};
       S.mOpen=null;S.mq="";renderMatch();return}
@@ -1369,7 +1371,7 @@ $("entries").addEventListener("input",e=>{
   const box=inp.parentElement.querySelector("[data-gsug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
   const m=S.items.filter(it=>itemHit(it,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
-  box.innerHTML=m.map(it=>`<button type="button" data-gsugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-gsugnew><span>Add “${esc(q)}” as a new item</span></button>`);
+  box.innerHTML=m.map(it=>`<button type="button" data-gsugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,Number(inp.dataset.more)||0)+(exact?"":`<button type="button" class="mk" data-gsugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))});
   box.hidden=false});
 $("entries").addEventListener("change",e=>{const id=gidOf(e.target);if(!id)return;const t=e.target,v=Number(t.value);
@@ -1391,7 +1393,7 @@ $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]
   const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
   const m=S.items.filter(it=>itemHit(it,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
-  box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,inp.dataset.more==="1")+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
+  box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,Number(inp.dataset.more)||0)+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
   box.hidden=false;if(!S.foods&&q.replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&inp.value.trim()===q)inp.dispatchEvent(new Event("input",{bubbles:true}))})});
 $("pedit").addEventListener("click",e=>{if(sugExtClick(e))return;const b=e.target.closest("[data-sugi],[data-sugnew],[data-sugdb],[data-sugoff]");if(!b)return;
   const pad=b.closest(".padd"),inp=pad.querySelector("[data-psrch]"),box=pad.querySelector("[data-psug]");
