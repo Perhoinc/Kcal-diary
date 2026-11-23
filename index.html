@@ -25,6 +25,7 @@
   --accent:#7a2ff2; --accent-soft:#efe2ff; --over:#f05a0a;--burn:#c0262d; --over-soft:#ffe4d1; --ok:#12a243; --ok-soft:#d6f7e0;
   --hi:#ffcc00; --hi-soft:#fff2b8; --on-hi:#2a1650;
   --muted:#8a7fa0;
+  --tray:#f6f0ff; --meal-ink:#6a1fe0; --item-ink:#7a5a00; --ok-ink:#0b6b2c; --gray-soft:#ece8f3; --item-line:#e0b100;
   --f-display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
   --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -32,12 +33,14 @@
   --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
   --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d;--burn:#e0434a; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
   --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
-  --muted:#9488a8; color-scheme:dark}}
+  --muted:#9488a8; color-scheme:dark;
+  --tray:#2a1c45; --meal-ink:#c39bff; --item-ink:#ffd83b; --ok-ink:#5ee68b; --gray-soft:#2e2346; --item-line:#c9a400}}
 :root[data-theme="dark"]{
   --bg:#140d20; --paper:#211637; --ink:#f2ebff; --ink-soft:#c2b2e0; --line:#3d2d5c;
   --accent:#c39bff; --accent-soft:#35205c; --over:#ff8a3d;--burn:#e0434a; --over-soft:#47230d; --ok:#5ee68b; --ok-soft:#153f24;
   --hi:#ffd83b; --hi-soft:#45380c; --on-hi:#2a1650;
-  --muted:#9488a8; color-scheme:dark}
+  --muted:#9488a8; color-scheme:dark;
+  --tray:#2a1c45; --meal-ink:#c39bff; --item-ink:#ffd83b; --ok-ink:#5ee68b; --gray-soft:#2e2346; --item-line:#c9a400}
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -172,7 +175,103 @@ body[data-view="history"] .today-only,body[data-view="weight"] .today-only,body[
 .cbm button.on{background:var(--hi);color:var(--on-hi)}
 body.hasclip main{padding-bottom:120px}
 body.hasclip .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
-.pblock[hidden],.ic[hidden]{display:none!important}
+/* ---- Edit tab: grouped sections with icons, closed lists, one open card at a time */
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;pointer-events:none}
+.tile{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;border-radius:11px;background:var(--gray-soft);color:var(--ink-soft)}
+.tile .ico{width:22px;height:22px}
+.tile.sm{width:34px;height:34px;border-radius:9px}.tile.sm .ico{width:19px;height:19px}
+.tile.xs{width:28px;height:28px;border-radius:8px}.tile.xs .ico{width:16px;height:16px}
+.t-meal,.t-dish{background:var(--accent-soft);color:var(--meal-ink)}
+.t-item{background:var(--hi-soft);color:var(--item-ink)}
+.t-leaf{background:var(--ok-soft);color:var(--ok-ink)}
+.t-db{background:transparent;border:1.5px dashed var(--line);color:var(--ink-soft)}
+.tg{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--accent-soft);color:var(--meal-ink)}
+.tg.t-ok{background:var(--ok-soft);color:var(--ok-ink)}
+.tg.o-meal{background:var(--paper);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.tg[hidden]{display:none}
+.eview{display:flex;flex-direction:column;gap:10px}
+.egrp{margin:6px 2px 0;font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
+.egrp~.egrp{margin-top:14px}
+details.sec{background:none;border:0;border-radius:0;padding:0}
+details.sec>summary{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;list-style:none;font-weight:400}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary .st{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+details.sec>summary .st b{font-size:17px;font-weight:600}
+details.sec>summary .st small{font-size:13px;color:var(--ink-soft)}
+details.sec>summary .chev{color:var(--ink-soft);transition:transform .15s}
+details.sec[open]>summary .chev{transform:rotate(90deg)}
+details.sec[open]>summary{margin-bottom:8px}
+details.sec .secbody{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+details.sec .secbody>.set,details.sec .secbody>.potedit{margin-top:0}
+.ebar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.ebar .srch{flex:1;min-width:0;height:44px;border-radius:12px}
+.ebtn{height:44px;border-radius:12px;padding:0 14px;font-size:15px;font-weight:600;background:var(--paper);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.ebtn .ico{color:var(--meal-ink);width:18px;height:18px}
+.pedit,.iedit{margin-top:0;display:flex;flex-direction:column;gap:8px}
+.erow{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink)}
+.erow[hidden],.elet[hidden],.pblock[hidden],.ic[hidden]{display:none!important}
+.erow .et{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.erow .et b{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.erow .em{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink-soft)}
+.erow .en{font-size:13px;color:var(--ink)}
+.erow .en.none{color:var(--ink-soft);font-style:italic}
+.erow .chev{color:var(--ink-soft)}
+.srct{font-size:11px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line);border-radius:6px;padding:2px 5px}
+.elet{font-family:var(--f-display);font-size:15px;font-weight:700;color:var(--ink-soft);padding:6px 4px 0}
+.iconb{width:36px;height:36px;flex-shrink:0;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-soft);padding:0;border-radius:8px}
+.iconb:hover{background:var(--bg)}
+/* an opened meal or item */
+.pblock,.iedit .ic{background:var(--paper);border:2px solid var(--accent);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.iedit .ic{border-color:var(--item-line)}
+.iedit .ic#newitem{border-style:dashed}
+.pblock .ph,.iedit .ic .ih{display:flex;align-items:center;gap:10px;font-weight:400}
+.pnm{flex:1;min-width:0;display:flex;align-items:center;gap:6px;border-bottom:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);padding-bottom:3px;color:var(--ink-soft)}
+.iedit .ic .pnm{border-bottom-color:color-mix(in srgb,var(--item-line) 60%,transparent)}
+.pnm .ico{width:15px;height:15px}
+.pedit .pnm input,.iedit .ic .pnm input{flex:1;min-width:0;border:0;padding:0;background:transparent;font-size:19px;font-weight:700;color:var(--ink);border-radius:0}
+.iedit .ic .pnm input{font-size:18px}
+.iedit .ic label.pnm{flex-direction:row;align-items:center;gap:6px;font-size:inherit}
+.pnm input:focus{outline:none}
+.pnm:focus-within{border-bottom-style:solid;border-bottom-color:var(--accent)}
+.pblock .ptot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-soft)}
+.pblock .ptot .pkc{font-family:var(--f-display);font-size:22px;font-weight:700;color:var(--ink)}
+.ptray{background:var(--tray);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:5px}
+.trl{font-family:var(--f-display);font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--meal-ink);padding:2px 4px 3px}
+.ptray .pi,.pblock .ptray .pi.amt{background:var(--paper);border-radius:9px;padding:6px 2px 6px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto 36px;gap:6px;align-items:center}
+.ptray .pi>[data-f=food]{border:0;background:transparent;padding:6px 0;font-size:16px;font-weight:500;color:var(--ink);min-width:0;border-radius:0}
+.ptray .pi>[data-f=food]:focus{outline:none;box-shadow:inset 0 -1px 0 var(--accent)}
+.ptray .pi .pk{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-soft)}
+.ptray .pi .pk input{width:64px;box-sizing:border-box;text-align:right;font-weight:600;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper)}
+.pblock .ptray .pi.amt>[data-f=food]{grid-column:1/3;grid-row:1}
+.ptray .pi.amt [data-rm]{grid-column:3;grid-row:1}
+.pblock .ptray .pi.amt .step{grid-column:1;grid-row:2;justify-self:start}
+.pblock .ptray .pi.amt .pk{grid-column:2/4;grid-row:2;padding-right:6px}
+.ptray .padd .addf{display:flex;align-items:center;gap:8px;height:44px;box-sizing:border-box;padding:0 12px;border:1.5px dashed color-mix(in srgb,var(--accent) 45%,transparent);border-radius:9px;margin-top:3px;color:var(--meal-ink);background:transparent}
+.ptray .padd .addf input{border:0;outline:0;background:transparent;font-size:16px;color:var(--ink);width:100%;min-width:0;padding:0}
+.ptray .padd .pnew{background:var(--paper);border-radius:9px;padding:8px}
+.pblock .pdd{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:0}
+.pblock .pdd>summary{display:flex;align-items:center;gap:10px;padding:10px 12px;list-style:none;font-weight:400;color:var(--ink)}
+.pblock .pdd>summary::-webkit-details-marker{display:none}
+.pblock .pdd>summary .st{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.pblock .pdd>summary .st b{font-size:15px;font-weight:600}
+.pblock .pdd>summary .st small{font-size:13px;color:var(--ink-soft)}
+.pblock .pdd>summary>.ico{color:var(--ink-soft)}
+.pblock .pdd[open]>summary .chev{transform:rotate(90deg)}
+.pblock .pdd .pdish{margin:0;padding:0 12px 12px}
+.pfoot{display:flex;align-items:center;gap:8px}
+.pfoot .sp{flex:1}
+.pfoot .hint{font-size:12px;color:var(--ink-soft)}
+.delb{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--burn);font-weight:600;font-size:15px;padding:8px 6px}
+.delb .ico{width:18px;height:18px}
+.iedit .ic .r2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:end}
+.inut2{background:color-mix(in srgb,var(--hi-soft) 45%,var(--paper));border:1px solid color-mix(in srgb,var(--item-line) 35%,transparent);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.inut2 .nh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px;font-family:var(--f-display);font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--item-ink)}
+.inut2 .nh .srct{font-family:var(--f-body);letter-spacing:0;text-transform:none}
+.inut2 .r3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.iedit .ic .na2{display:flex;gap:8px;justify-content:flex-end}
+.prow .pname,.mrow .pname{display:flex;align-items:center;gap:9px}
+.prow .pname .pnt,.mrow .pname .pnt{min-width:0}
+.mrow .pname{font-size:14px}.mrow .tile{background:var(--paper)}.mrow .pname .sub{display:block;font-size:12px;color:var(--ink-soft)}
 .esrch{margin:2px 0 8px}
 .nomatch{font-size:13px;color:var(--muted);padding:6px 2px}
 .mrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--accent-soft)}
@@ -209,12 +308,6 @@ body.hasclip .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .nutl .nb.fib span{background:var(--ok)}
 .nutl b{font-variant-numeric:tabular-nums}
 .nutnote{font-size:12px;color:var(--ink-soft)}
-.iedit .ic details.inut{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:6px 0 0}
-.iedit .ic .inut summary{font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;list-style:none;padding:2px 0}
-.iedit .ic .inut summary::-webkit-details-marker{display:none}
-.iedit .ic .inut summary b{color:var(--ink)}
-.iedit .ic .inut .r3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
-.iedit .ic .inut .nbasis{font-size:11px;color:var(--ink-soft);margin-top:4px}
 .pp{color:var(--ink);font-weight:600}
 .dbh{display:flex;justify-content:space-between;gap:8px;padding:8px 10px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--line);background:var(--bg)}
 .dbh span:last-child{text-transform:none;letter-spacing:0;font-weight:600}
@@ -298,13 +391,8 @@ body.hasclip .toast{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
 .menu .star.on{color:var(--ok);opacity:1}
 .menu .danger.confirm{background:var(--over);color:var(--paper);border-color:var(--over)}
 .mbtn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:3px 9px;font-size:13px;font-weight:600}
-.iedit{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .iedit .ir{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
-.iedit .ic{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .iedit .ic input,.iedit .ic select{font-size:16px;padding:6px 8px}
-.iedit .ic .r1{display:flex;gap:6px}
-.iedit .ic .r1 input{flex:1}
-.iedit .ic .r2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:end}
 .iedit .ic label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-soft);min-width:0}
 .iedit .ic select{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 6px;font-size:14px;min-width:0}
 .iedit .ic[data-mode="piece"] .usual{visibility:hidden}
@@ -353,20 +441,8 @@ summary{cursor:pointer;font-weight:600}
 .qa summary h2{display:inline}
 .qa-body{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .set{display:grid;grid-template-columns:1fr 110px;gap:8px 12px;align-items:center;margin-top:12px;font-size:14px}
-.pedit{margin-top:12px;display:flex;flex-direction:column;gap:14px}
-.pblock{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
-.pblock .pi{display:grid;grid-template-columns:1fr 72px auto;gap:6px}
-.pblock .ph{display:flex;gap:8px;align-items:center;font-weight:700}
 .pedit input,.pedit select,.potedit input,.potedit select{font-size:16px}
-.pblock .pi.amt{grid-template-columns:minmax(0,1fr) 72px auto;align-items:center}
-.pblock .pi.amt>[data-f=food]{grid-column:1/3}
-.pblock .pi.amt .pk{grid-column:2/4;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft)}
-.pblock .pi.amt .pk input{width:72px;color:var(--ink)}
-.pblock .pi.amt .step{justify-self:start}
-.pblock .ptot{font-size:13px;color:var(--ink-soft)}
-.pblock .pdd{border:0;padding:0;background:none}
-.pblock .pdd summary{font-size:13px;font-weight:600;color:var(--ink-soft)}
-.pdish{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.pdish{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .pdish label,.pnew label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-soft);min-width:0}
 .pf{display:flex;align-items:center;gap:6px}
 .pf input{flex:1;min-width:0;width:0}
@@ -477,31 +553,37 @@ summary{cursor:pointer;font-weight:600}
     <div class="wlist" id="wlist"></div>
   </section>
 
-  <details id="presetbox" class="edit-only">
-    <summary>Edit regular meals</summary>
-    <input class="srch esrch" id="psrch2" type="search" placeholder="Search regular meals" aria-label="Search regular meals to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+  <div class="eview edit-only">
+  <div class="egrp">Food</div>
+  <details id="presetbox" class="sec">
+    <summary data-ico="meal"><span class="st"><b>Regular meals</b><small id="sum-meals"></small></span></summary>
+    <div class="ebar"><input class="srch" id="psrch2" type="search" placeholder="Search regular meals" aria-label="Search regular meals to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button class="ghost ebtn" id="newpreset" type="button">New meal</button></div>
     <div class="pedit" id="pedit"></div>
   </details>
 
-  <details id="potbox" class="edit-only">
-    <summary>Pots &amp; containers</summary>
-    <div class="potedit" id="potedit"></div>
-  </details>
-
-  <details id="itembox" class="edit-only">
-    <summary>Edit regular items</summary>
-    <input class="srch esrch" id="isrch" type="search" placeholder="Search regular items" aria-label="Search regular items to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+  <details id="itembox" class="sec">
+    <summary data-ico="item"><span class="st"><b>Regular items</b><small id="sum-items"></small></span></summary>
+    <div class="ebar"><input class="srch" id="isrch" type="search" placeholder="Search regular items" aria-label="Search regular items to edit" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button class="ghost ebtn" id="newitembtn" type="button">New item</button></div>
     <div class="iedit" id="iedit"></div>
   </details>
 
-  <details id="matchbox" class="edit-only">
-    <summary>Nutrients from food databases <span class="mcount" id="mcount"></span></summary>
-    <div class="mintro">Suggested matches from Livsmedelsverket and Open Food Facts for regular items without nutrients. Use fills the empty nutrient fields, scaled to the item's own kcal. Kcal is never changed.</div>
-    <div class="mlist" id="mlist"></div>
+  <details id="potbox" class="sec">
+    <summary data-ico="pot"><span class="st"><b>Pots &amp; containers</b><small id="sum-pots"></small></span></summary>
+    <div class="secbody"><div class="potedit" id="potedit"></div></div>
   </details>
 
-  <details class="edit-only">
-    <summary>Targets and daily burn</summary>
+  <details id="matchbox" class="sec">
+    <summary data-ico="leaf"><span class="st"><b>Nutrients from food databases</b><small id="sum-match"></small></span><span class="tg t-ok" id="mcount" hidden></span></summary>
+    <div class="secbody">
+    <div class="mintro">Suggested matches from Livsmedelsverket and Open Food Facts for regular items without nutrients. Use fills the empty nutrient fields, scaled to the item's own kcal. Kcal is never changed.</div>
+    <div class="mlist" id="mlist"></div>
+    </div>
+  </details>
+
+  <div class="egrp">Settings</div>
+  <details id="setbox" class="sec">
+    <summary data-ico="target"><span class="st"><b>Targets and daily burn</b><small id="sum-targets"></small></span></summary>
+    <div class="secbody">
     <div class="set">
       <label for="s-burn">Estimated daily burn (kcal)</label><input id="s-burn" type="number" step="10" class="num">
       <label for="s-low">Target, low (kcal)</label><input id="s-low" type="number" step="10" class="num">
@@ -510,16 +592,20 @@ summary{cursor:pointer;font-weight:600}
       <label for="s-prot">Protein target (g a day)</label><input id="s-prot" type="number" step="5" class="num">
       <label for="s-fib">Fibre target (g a day)</label><input id="s-fib" type="number" step="1" class="num">
     </div>
+    </div>
   </details>
-  <details id="backupbox" class="edit-only" hidden>
-    <summary>Backup</summary>
+  <details id="backupbox" class="sec" hidden>
+    <summary data-ico="backup"><span class="st"><b>Backup</b><small id="sum-backup"></small></span></summary>
+    <div class="secbody">
     <div class="backup">
       <p>Your log is saved in this browser on this device only. Export a backup now and then, and use it to move your log to another device.</p>
       <div class="row2"><button class="primary" id="exportbtn" type="button">Export backup</button>
         <label class="ghost" for="importfile" style="cursor:pointer">Import backup</label><input type="file" id="importfile" accept="application/json,.json" hidden></div>
       <div id="importconfirm" class="row2" hidden><span id="importmsg"></span><button class="primary" id="importyes" type="button">Replace</button><button class="ghost" id="importno" type="button">Cancel</button></div>
     </div>
+    </div>
   </details>
+  </div>
 </main>
 <div class="updatebar" id="updatebar" role="status" hidden><span>A new version is ready.</span><button id="updatebtn" type="button">Reload</button></div>
 <div class="clipbar today-only" id="clipbar" role="region" aria-label="Copied row" hidden></div>
@@ -545,6 +631,7 @@ function toast(msg,act){const t=$("toast");t.textContent=msg;
 function showStatus(msg){const s=$("status");s.textContent=msg;s.hidden=!msg}
 
 function render(){
+  renderSecSums();
   const {burn,targetLow,targetHigh}=S.settings;
   $("datelabel").textContent=dayLabel(S.date);
   $("next").disabled=false;
@@ -571,7 +658,7 @@ function render(){
   // quick add
   const q=$("quick");
   if(S.loaded){
-    if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`;
+    if(!S.presets.length) q.innerHTML=`<div class="empty">No regular meals yet. Add one in Edit, under Regular meals.</div>`;
     else{const ae=document.activeElement;
       if(!(ae&&ae.tagName==="INPUT"&&ae.closest&&ae.closest(".qdish"))){
       const toks=sfold(S.mq).split(" ").filter(Boolean),searching=toks.length>0;
@@ -580,7 +667,7 @@ function render(){
         const k=totalOf(p),done=list.some(e=>e.preset===p.id),dish=isDish(p);
         const open=S.qopen&&S.qopen[p.id]!==undefined?S.qopen[p.id]:!byName;
         return `<div class="qcard"><button class="qbtn${done?" done":""}" data-preset="${esc(p.id)}" aria-expanded="${dish&&S.dish&&S.dish.id===p.id?"true":"false"}" ${S.canWrite?"":"disabled"}><b>${esc(p.name)}</b><span class="num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span></button><button class="qinfo" type="button" data-qinfo="${esc(p.id)}" aria-expanded="${open?"true":"false"}" aria-label="Show what is in ${esc(p.name)}">ⓘ</button>${open?`<div class="qdetail">${its.map(i=>`<div class="qd"><span>${esc(i.food)}</span><span class="num">${n(i.kcal)} kcal</span></div>`).join("")}</div>`:""}${dish&&S.dish&&S.dish.id===p.id?dishPanel(p):""}</div>`}).join("");
-      q.innerHTML=html||(searching?`<div class="empty">No regular meal matches “${esc(S.mq.trim())}”.</div>`:`<div class="empty">No regular meals yet. Add one under “Edit regular meals”.</div>`)}}
+      q.innerHTML=html||(searching?`<div class="empty">No regular meal matches “${esc(S.mq.trim())}”.</div>`:`<div class="empty">No regular meals yet. Add one in Edit, under Regular meals.</div>`)}}
   }
 
   // single items
@@ -717,14 +804,42 @@ function dishPanel(p){const d=S.dish,k=totalOf(p),por=Number(p.portions)||1,ck=N
     <div class="nres" data-dres>${dishRes(p)}</div>
     <div class="na"><button class="ghost" type="button" data-dcancel>Cancel</button><button class="primary" type="button" data-dadd ${S.canWrite?"":"disabled"}>Add to ${S.itemMeal.toLowerCase()}</button></div>
   </div>`}
-function renderPresets(){
-  const box=$("pedit");
-  box.innerHTML=S.presets.map(p=>`<div class="pblock" data-pid="${esc(p.id)}">
-    <div class="ph"><input value="${esc(p.name)}" data-f="name" aria-label="Name" style="flex:1"></div>
-    ${(p.items||[]).map(it=>piHtml(it.food,it.kcal,it.nut)).join("")}
-    <div class="padd"><input class="srch" type="search" data-psrch placeholder="Search items to add to this meal" aria-label="Search regular items to add to this meal" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="psug" data-psug hidden></div></div>
+// ---- Icons and the Edit tab's section summaries
+const ICO={meal:'<path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c0-1.2 1-1.3 1-2.5M12 7.5c0-1.2 1-1.3 1-2.5M16 7.5c0-1.2 1-1.3 1-2.5"/>',
+  dish:'<path d="M4 9h16v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z"/><path d="M2 11h2M20 11h2M9 6h6"/>',
+  item:'<path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8.5-8.5 8.5z"/><circle cx="8.5" cy="8.5" r="1.4"/>',
+  pot:'<path d="M5 9h14v7a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M3 9h18M10 5h4"/>',
+  leaf:'<path d="M5 19c0-8.5 5.5-14 14.5-14 0 8.5-5.5 14-14.5 14z"/><path d="M5 19l7.5-7.5"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8"/>',
+  backup:'<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2"/>',
+  db:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+  right:'<path d="M9.5 6l6 6-6 6"/>',up:'<path d="M6 15l6-6 6 6"/>',plus:'<path d="M12 5v14M5 12h14"/>',x:'<path d="M7 7l10 10M17 7 7 17"/>',
+  trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>'};
+const ico=(k,c="")=>`<svg class="ico${c?" "+c:""}" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+const tile=(k,sz="")=>`<span class="tile t-${k}${sz?" "+sz:""}">${ico(k)}</span>`;
+document.querySelectorAll("details.sec>summary[data-ico]").forEach(sm=>{sm.insertAdjacentHTML("afterbegin",tile(sm.dataset.ico));sm.insertAdjacentHTML("beforeend",ico("right","chev"))});
+$("newpreset").insertAdjacentHTML("afterbegin",ico("plus"));$("newitembtn").insertAdjacentHTML("afterbegin",ico("plus"));
+function renderSecSums(){const set=(id,t)=>{const el=$(id);if(el&&el.textContent!==t)el.textContent=t};
+  const m=S.presets.length,d=S.presets.filter(isDish).length,k=S.items.length,po=S.pots.length,st=S.settings;
+  set("sum-meals",m?`${m} meal${m===1?"":"s"}${d?` · ${d} of them dish${d===1?"":"es"}`:""}`:"None yet");
+  set("sum-items",k?`${k} item${k===1?"":"s"}`:"None yet");
+  set("sum-pots",po?`${po} pot${po===1?"":"s"}`:"None yet");
+  set("sum-match","Matches for your items");
+  set("sum-targets",`${n(st.targetLow)}–${n(st.targetHigh)} kcal · burn ${n(st.burn)}`);
+  set("sum-backup","Export or import a file")}
+// ---- Regular meals in Edit: one line per meal; tapping one opens it (and closes the one that was open). Changes save as you go.
+S.openPid=null;S.pddOpen={};
+function mealRowHtml(p){const k=totalOf(p),ni=(p.items||[]).filter(i=>String(i.food||"").trim()).length,dish=isDish(p);
+  return `<button type="button" class="erow" data-popen="${esc(p.id)}" aria-expanded="false">${tile(dish?"dish":"meal","sm")}<span class="et"><b>${esc(p.name)}</b><span class="em"><span>${ni} ingredient${ni===1?"":"s"} · ${n(k)} kcal</span>${dish?`<span class="tg o-meal">Dish · ${fmtN(p.portions)} portion${Number(p.portions)===1?"":"s"}</span>`:""}</span></span>${ico("right","chev")}</button>`}
+function mealOpenHtml(p){const id=esc(p.id);
+  return `<div class="pblock" data-pid="${id}">
+    <div class="ph">${tile(isDish(p)?"dish":"meal","sm")}<label class="pnm"><input value="${esc(p.name)}" data-f="name" aria-label="Meal name" autocomplete="off">${ico("edit")}</label><button type="button" class="iconb" data-pclose aria-expanded="true" aria-label="Close ${esc(p.name)}">${ico("up")}</button></div>
     <div class="ptot" data-ptot></div>
-    <details class="pdd"${isDish(p)?" open":""}><summary>Dish: portions and cooked weight</summary>
+    <div class="ptray"><div class="trl" data-pcount>Ingredients</div>
+    ${(p.items||[]).filter(it=>String(it.food||"").trim()||Number(it.kcal)).map(it=>piHtml(it.food,it.kcal,it.nut)).join("")}
+    <div class="padd"><label class="addf">${ico("plus")}<input type="search" data-psrch placeholder="Add ingredient" aria-label="Search regular items to add to this meal" autocomplete="off" autocapitalize="off" spellcheck="false"></label><div class="psug" data-psug hidden></div></div>
+    </div>
+    <details class="pdd"${S.pddOpen[p.id]?" open":""}><summary>${ico("pot")}<span class="st"><b>Dish: portions and cooked weight</b><small data-pddsum></small></span>${ico("right","chev")}</summary>
       <div class="pdish">
         <label>Makes<span class="pf"><input type="number" inputmode="decimal" min="0" step="any" data-f="portions" value="${isDish(p)?p.portions:""}" placeholder="–" aria-label="Portions"><em>portions</em></span></label>
         <label>Cooked weight<span class="pf"><input type="number" inputmode="decimal" min="0" step="any" data-f="cookedG" value="${Number(p.cookedG)>0?p.cookedG:""}" placeholder="–" aria-label="Cooked weight in grams"><em>g</em></span></label>
@@ -732,26 +847,47 @@ function renderPresets(){
         <div class="pres" data-pres>Weigh the pot with the food in it. The pot's empty weight is subtracted.</div>
       </div>
     </details>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ghost" data-additem type="button">Blank row</button><button class="primary" data-save type="button">Save</button><button class="ghost" data-delp type="button" style="margin-left:auto">Delete</button></div>
-  </div>`).join("")+`<div class="nomatch" id="pnone" hidden></div><button class="ghost" id="newpreset" type="button" style="align-self:flex-start">New regular meal</button>`;
+    <div class="pfoot"><button type="button" class="delb" data-delp>${ico("trash")}<span>Delete</span></button><span class="sp"></span><button class="ghost" data-additem type="button">Blank row</button></div>
+  </div>`}
+function renderPresets(){
+  const box=$("pedit");if(S.openPid&&!S.presets.some(p=>p.id===S.openPid))S.openPid=null;
+  box.innerHTML=S.presets.map(p=>p.id===S.openPid?mealOpenHtml(p):mealRowHtml(p)).join("")+`<div class="nomatch" id="pnone" hidden></div>`;
   box.querySelectorAll(".pblock").forEach(updatePTot);
   filterPresets();
   if(S.focusPid){const b=box.querySelector(`.pblock[data-pid="${S.focusPid}"]`);S.focusPid=null;if(b){b.scrollIntoView({block:"center"});const i=b.querySelector('[data-f="name"]');if(i){i.focus();i.select()}}}
 }
+function refreshPresetRows(){const box=$("pedit"),rows=[...box.querySelectorAll("[data-popen]")],ids=rows.map(r=>r.dataset.popen).concat(S.openPid?[S.openPid]:[]);
+  if(ids.length!==S.presets.length||S.presets.some(p=>!ids.includes(p.id))){renderPresets();return}
+  // Only rows that changed are replaced: a row being tapped must stay the same element for the tap to land.
+  rows.forEach(r=>{const p=S.presets.find(x=>x.id===r.dataset.popen);if(!p)return;const w=document.createElement("div");w.innerHTML=mealRowHtml(p);const nr=w.firstElementChild;nr.hidden=r.hidden;if(nr.outerHTML!==r.outerHTML)r.replaceWith(nr)})}
+// Saving an open meal: from what its fields hold now. Unchanged meals aren't written. Stepper taps wait a moment so a run of taps is one undo step.
+function presetDoc(block){const p=readPreset(block);return {name:p.name,...(p.meal?{meal:p.meal}:{}),items:p.items,order:p.order||0,...(p.portions>0?{portions:p.portions}:{}),...(p.cookedG>0?{cookedG:p.cookedG}:{})}}
+const pSame=(a,b)=>!!a&&!!b&&a.name===b.name&&JSON.stringify(a.items||[])===JSON.stringify(b.items||[])&&(Number(a.portions)||0)===(Number(b.portions)||0)&&(Number(a.cookedG)||0)===(Number(b.cookedG)||0);
+function savePreset(block,msg,pre){if(!block||!block.isConnected)return Promise.resolve();clearTimeout(block._t);block._t=null;
+  const id=block.dataset.pid,doc=presetDoc(block),old=S.presets.find(x=>x.id===id);if(!pre&&pSame(old,doc))return Promise.resolve();
+  S.presetsQuiet=true;return write(async()=>{if(pre)await pre();await S.db.doc("presets/"+id).set(doc)},msg||"Saved")}
+const schedSave=block=>{clearTimeout(block._t);block._t=setTimeout(()=>savePreset(block),700)};
+function flushPresets(){$("pedit").querySelectorAll(".pblock").forEach(b=>{if(b._t)savePreset(b)})}
+window.addEventListener("pagehide",flushPresets);document.addEventListener("visibilitychange",()=>{if(document.hidden)flushPresets()});
+function openPreset(id){flushPresets();S.openPid=id;renderPresets();
+  const el=id&&$("pedit").querySelector(`.pblock[data-pid="${id}"]`);if(el){const r=el.getBoundingClientRect();if(r.top<8||r.top>innerHeight*0.6)window.scrollTo({top:scrollY+r.top-12})}}
 // An ingredient row: "50 g Kvarg" / "2 × Boiled egg" become an amount row with a stepper; anything else stays a plain text + kcal row.
 const hasAmt=f=>/^\d+(?:[.,]\d+)? ?(?:g|dl) \S/.test(f)||/^\d+(?:[.,]\d+)? × \S/.test(f);
 const presetFood=(q,u,name)=>u?`${fmtN(q)} ${u} ${name}`:`${fmtN(q)} × ${name}`;
 function piHtml(food,kcal,nut){const k=Number(kcal)||0;food=String(food||"");const nd=hasNut(nut)?` data-nut="${esc(JSON.stringify(nut))}"`:"";
   if(hasAmt(food)){const a=splitQty(food),pu=a.q>0?k/a.q:0;
-    return `<div class="pi amt" data-amt data-unit="${a.unit}" data-pu="${pu}" data-nq="${a.q}"${nd}><input value="${esc(a.name)}" data-f="food" aria-label="Item"><button class="ghost" data-rm type="button">✕</button><span class="step" role="group" aria-label="Amount"><button type="button" data-rpm aria-label="Less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${a.q}" data-f="amt" aria-label="Amount"><span class="u">${a.unit||"×"}</span><button type="button" data-rpp aria-label="More">+</button></span><span class="pk"><input type="number" class="num" inputmode="decimal" min="0" step="1" value="${k}" data-f="kcal" aria-label="kcal"> kcal</span></div>`}
-  return `<div class="pi"${nd}><input value="${esc(food)}" data-f="food" aria-label="Item"><input type="number" class="num" value="${k}" data-f="kcal" aria-label="kcal"><button class="ghost" data-rm type="button">✕</button></div>`}
+    return `<div class="pi amt" data-amt data-unit="${a.unit}" data-pu="${pu}" data-nq="${a.q}"${nd}><input value="${esc(a.name)}" data-f="food" aria-label="Item"><button class="iconb" data-rm type="button" aria-label="Remove">${ico("x")}</button><span class="step" role="group" aria-label="Amount"><button type="button" data-rpm aria-label="Less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${a.q}" data-f="amt" aria-label="Amount"><span class="u">${a.unit||"×"}</span><button type="button" data-rpp aria-label="More">+</button></span><span class="pk"><input type="number" class="num" inputmode="decimal" min="0" step="1" value="${k}" data-f="kcal" aria-label="kcal"> kcal</span></div>`}
+  return `<div class="pi"${nd}><input value="${esc(food)}" data-f="food" aria-label="Item"><span class="pk"><input type="number" class="num" inputmode="decimal" min="0" step="1" value="${k}" data-f="kcal" aria-label="kcal"> kcal</span><button class="iconb" data-rm type="button" aria-label="Remove">${ico("x")}</button></div>`}
 // Nutrients of an editor row, scaled to the amount now in it
 function piNut(r){let o=null;try{o=r.dataset.nut?JSON.parse(r.dataset.nut):null}catch(_){o=null}if(!hasNut(o))return null;
   if(r.dataset.amt!==undefined){const q=Number(r.querySelector('[data-f="amt"]').value)||0,q0=Number(r.dataset.nq)||0;return q0>0?nutMul(o,q/q0):o}return o}
 function updatePTot(block){let sum=0;block.querySelectorAll('.pi [data-f="kcal"]').forEach(i=>sum+=Number(i.value)||0);
   const por=Number(block.querySelector('[data-f="portions"]').value)||0,ck=Number(block.querySelector('[data-f="cookedG"]').value)||0;
   let pr=null;block.querySelectorAll(".pi").forEach(r=>{pr=nutAdd(pr,piNut(r))});
-  block.querySelector("[data-ptot]").textContent=`Total ${n(sum)} kcal`+(pr&&pr.p!=null?` · ${fmtG(pr.p)} g protein`:"")+(por>0?` · ${n(sum/por)} per portion`:"")+(ck>0?` · ${n(sum/ck*100)} per 100 g`:"")}
+  const meta=[por>0?`${n(sum/por)} kcal each`:"",ck>0?`${n(sum/ck*100)} per 100 g`:"",pr&&pr.p!=null?`${fmtG(pr.p)} g protein`:""].filter(Boolean).join(" · ");
+  block.querySelector("[data-ptot]").innerHTML=`<span class="pkc">${n(sum)} kcal</span>${por>0?`<span class="tg">Dish · ${fmtN(por)} portion${por===1?"":"s"}</span>`:""}${meta?`<span>${meta}</span>`:""}`;
+  const c=block.querySelectorAll(".pi").length,cl=block.querySelector("[data-pcount]");if(cl)cl.textContent=c?`Ingredients · ${c}`:"Ingredients";
+  const ds=block.querySelector("[data-pddsum]");if(ds)ds.textContent=por>0||ck>0?[por>0?`Makes ${fmtN(por)} portion${por===1?"":"s"}`:"Portions not set",ck>0?`${n(ck)} g cooked`:"cooked weight not set"].join(" · "):"Not set. For food cooked in a pot and eaten over several meals"}
 // ---- Pots and containers ----
 function renderPots(){
   $("potedit").innerHTML=`<div class="hint">The empty weight of the pots and lunch boxes you weigh food in. Used for a dish's cooked weight and when you log by grams.</div>`+
@@ -768,11 +904,12 @@ $("potedit").addEventListener("click",e=>{
     S.forcePots=true;write(()=>S.db.collection("pots").add({name,g:Math.round(g*10)/10}),"Pot saved");return}
   if(e.target.matches("[data-potdel]")){const b=e.target,r=b.closest("[data-potid]");
     if(b.dataset.sure){S.forcePots=true;write(()=>S.db.doc("pots/"+r.dataset.potid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}});
-// Search in Edit regular meals: matches the name or any item, as currently typed in the fields. Hides blocks only, so unsaved edits stay.
+// Search in Edit › Regular meals: matches the name or any ingredient (the open meal as currently typed). Hides rows only.
 function filterPresets(){
   const toks=sfold(S.pq).split(" ").filter(Boolean);let shown=0;
-  $("pedit").querySelectorAll(".pblock").forEach(b=>{
-    const txt=[...b.querySelectorAll('[data-f="name"],[data-f="food"]')].map(i=>i.value).join(" ");
+  $("pedit").querySelectorAll(".pblock,[data-popen]").forEach(b=>{let txt;
+    if(b.dataset.popen){const p=S.presets.find(x=>x.id===b.dataset.popen);txt=p?[p.name,...(p.items||[]).map(i=>i.food)].join(" "):""}
+    else txt=[...b.querySelectorAll('[data-f="name"],[data-f="food"]')].map(i=>i.value).join(" ");
     const ok=!toks.length||hit(txt,toks);b.hidden=!ok;if(ok)shown++});
   const none=$("pnone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular meal matches “${S.pq.trim()}”.`}
 }
@@ -925,14 +1062,14 @@ function renderPick(){
   const items=searching?S.items.filter(it=>itemHit(it,toks)):S.items;
   const meals=searching?S.presets.filter(p=>hit(p.name,toks)):[];
   const top=box.scrollTop;
-  const mrows=meals.map(p=>{const k=totalOf(p),dish=isDish(p);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname"><span class="tag">Meal</span>${esc(p.name)}</span><span class="pk num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>${dish?"+ 1 portion":"Add"}</button></div>`}).join("");
+  const mrows=meals.map(p=>{const k=totalOf(p),dish=isDish(p);return `<div class="mrow" data-mid="${esc(p.id)}"><span class="pname">${tile(dish?"dish":"meal","xs")}<span class="pnt">${esc(p.name)}<span class="sub">${dish?"Dish":"Meal"} · ${(p.items||[]).length} ingredient${(p.items||[]).length===1?"":"s"}</span></span></span><span class="pk num">${dish?`${n(k/p.portions)} kcal / portion`:`${n(k)} kcal`}</span><button class="primary" type="button" data-madd ${S.canWrite?"":"disabled"}>${dish?"+ 1 portion":"Add"}</button></div>`}).join("");
   const irows=items.map(it=>{const q=S.pick[it.id]||0,id=esc(it.id),nm=esc(it.name);
     if(isW(it)){const u=it.mode,lab=(u==="g"?`${n(it.per100)} kcal / 100 g`:`${n(it.per100)} kcal / dl`)+pLab(it.nut);
-      return `<div class="prow w${q?" on":""}" data-pid="${id}"><button class="pname" type="button" data-ptog>${nm}<span class="sub">${lab}</span></button>`+
+      return `<div class="prow w${q?" on":""}" data-pid="${id}"><button class="pname" type="button" data-ptog>${tile("item","xs")}<span class="pnt">${nm}<span class="sub">${lab}</span></span></button>`+
       (q?`<span></span><div class="wline"><span class="step"><button type="button" data-pm aria-label="${stepOf(u)} ${u} less">−</button><input class="pin" type="number" inputmode="decimal" min="0" step="any" value="${q}" data-pin aria-label="Amount in ${u}"><span class="u">${u}</span><button type="button" data-pp aria-label="${stepOf(u)} ${u} more">+</button></span><span class="wk num" data-wk>= ${n(pickKcal(it,q))} kcal</span></div>`
         :`<button class="addw" type="button" data-pp ${S.canWrite?"":"disabled"}>+ ${u}</button>`)+`</div>`}
     return `<div class="prow${q?" on":""}" data-pid="${id}">
-    <button class="pname" type="button" data-ptog>${nm}${hasNut(it.nut)&&it.nut.p!=null?`<span class="sub">P ${fmtG(it.nut.p)} g</span>`:""}</button><span class="pk num">${n(it.kcal)} kcal</span>
+    <button class="pname" type="button" data-ptog>${tile("item","xs")}<span class="pnt">${nm}${hasNut(it.nut)&&it.nut.p!=null?`<span class="sub">P ${fmtG(it.nut.p)} g</span>`:""}</span></button><span class="pk num">${n(it.kcal)} kcal</span>
     <span class="step"><button type="button" data-pm aria-label="One less ${nm}" ${q?"":"disabled"}>−</button><span class="num" aria-label="Count">${q}</span><button type="button" data-pp aria-label="One more ${nm}" ${S.canWrite?"":"disabled"}>+</button></span></div>`}).join("");
   // Outside sources share one slot: Livsmedelsverket by default, Open Food Facts once searched. The other folds into one line.
   let drows="";
@@ -944,7 +1081,7 @@ function renderPick(){
     const lvFold=db.length?`<button class="dbfold" type="button" data-ext="lv"><span>Livsmedelsverket · ${db.length} match${db.length===1?"":"es"}</span><b>Show</b></button>`:"";
     if(ext==="lv"){const show=db.slice(0,moreN(S.dbMore));
       if(db.length)drows=`<div class="dbh"><span>From Livsmedelsverket</span><span>${show.length} of ${db.length}</span></div>`+
-        show.map(f=>`<div class="prow db" data-dbid="${esc(f.id)}"><button class="pname" type="button" data-dbpick>${esc(f.name)}<span class="sub">${dbLab(f)}</span></button><span></span><button class="addw" type="button" data-dbpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")+
+        show.map(f=>`<div class="prow db" data-dbid="${esc(f.id)}"><button class="pname" type="button" data-dbpick>${tile("db","xs")}<span class="pnt">${esc(f.name)}<span class="sub">${dbLab(f)}</span></span></button><span></span><button class="addw" type="button" data-dbpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")+
         (db.length>show.length?`<button class="dbmore" type="button" data-dbmore>Show ${Math.min(MORE,db.length-show.length)} more</button>`:"");
       // Once the products are on the phone, the count shows straight away, still folded.
       if(S.offFoods&&!(offHere&&offHere.status==="ok")){S.off={q:key,status:"ok",list:offFind(S.q)}}
@@ -955,7 +1092,7 @@ function renderPick(){
       if(offHere.status==="loading")drows+=`<div class="dbmsg">Loading Open Food Facts' products (once, about 0.6 MB)…</div>`;
       else if(offHere.status==="error")drows+=`<div class="dbmsg">Couldn't load Open Food Facts' products. Check your connection and <button class="dbmore" type="button" data-offsearch style="display:inline;width:auto;padding:0">try again</button>.</div>`;
       else{const all=offShown(),show=all.slice(0,moreN(S.offMore));
-        drows+=show.length?show.map(m=>`<div class="prow db" data-offid="${esc(m.code)}"><button class="pname" type="button" data-offpick>${esc(m.name)}<span class="sub">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</span><span class="sub">${offLab(m)}</span></button><span></span><button class="addw" type="button" data-offpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")
+        drows+=show.length?show.map(m=>`<div class="prow db" data-offid="${esc(m.code)}"><button class="pname" type="button" data-offpick>${tile("db","xs")}<span class="pnt">${esc(m.name)}<span class="sub">${esc([m.brand,m.qty].filter(Boolean).join(" · "))}</span><span class="sub">${offLab(m)}</span></span></button><span></span><button class="addw" type="button" data-offpick ${S.canWrite?"":"disabled"}>Pick</button></div>`).join("")
           +(all.length>show.length?`<button class="dbmore" type="button" data-offmore>Show ${Math.min(MORE,all.length-show.length)} more</button>`:"")
           :`<div class="dbmsg">No product sold in Sweden matches on Open Food Facts.</div>`}}}
   box.innerHTML=(mrows+irows+drows)||(searching?`<div class="empty" style="padding:10px">No regular item or meal matches “${esc(S.q.trim())}”.</div>`:`<div class="empty" style="padding:10px">No regular items yet. Tap ⋯ then ☆ on a logged item to save one.</div>`);
@@ -968,30 +1105,55 @@ function syncNew(){
   if(row.hidden!==!show)row.hidden=!show;
   if(show&&S.nameAuto!==false)$("nname").value=q;
 }
-function itemCard(it,isNew){const m=isW(it)?it.mode:(it&&(it.mode==="g"||it.mode==="dl")?it.mode:"piece"),id=isNew?"":esc(it.id);
+// ---- Regular items in Edit: one line per item under A–Z dividers; tapping one opens it (and closes the one that was open). Changes save as you go.
+S.openIid=null;S.inew=false;
+function itemCard(it,isNew){const m=it&&(it.mode==="g"||it.mode==="dl")?it.mode:"piece",id=isNew?"":esc(it.id);
   const val=m==="piece"?(it?Number(it.kcal)||0:""):(it?Number(it.per100)||"":""),us=m==="piece"?"":(it&&Number(it.usual)>0?it.usual:"");
   const lab=m==="piece"?"kcal each":m==="g"?"kcal / 100 g":"kcal / 100 ml",ul=m==="dl"?"Usual dl":"Usual g";
-  return `<div class="ic"${isNew?' id="newitem"':` data-iid="${id}"`} data-mode="${m}">
-    <div class="r1"><input value="${isNew?"":esc(it.name)}" data-f="name" placeholder="${isNew?"New item, e.g. Kvarg naturell":""}" aria-label="${isNew?"New item name":"Item name"}">${isNew?`<button class="primary" data-iadd type="button">Add</button>`:`<button class="ghost" data-idel type="button">✕</button>`}</div>
+  const src=it&&it.lv!=null?`<span class="srct">Livsmedelsverket</span>`:it&&it.off?`<span class="srct">Open Food Facts</span>`:"";
+  return `<div class="ic"${isNew?` id="newitem"${S.inew?"":" hidden"}`:` data-iid="${id}"`} data-mode="${m}">
+    <div class="ih">${tile("item","sm")}<label class="pnm"><input value="${isNew?"":esc(it.name)}" data-f="name" placeholder="${isNew?"New item, e.g. Kvarg naturell":""}" aria-label="${isNew?"New item name":"Item name"}" autocomplete="off">${ico("edit")}</label>${isNew?"":`<button type="button" class="iconb" data-iclose aria-expanded="true" aria-label="Close ${esc(it.name)}">${ico("up")}</button>`}</div>
     <div class="r2"><label>Counted<select data-f="mode"><option value="piece"${m==="piece"?" selected":""}>per piece</option><option value="g"${m==="g"?" selected":""}>per 100 g</option><option value="dl"${m==="dl"?" selected":""}>per dl</option></select></label>
       <label><span data-lab>${lab}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${val}" data-f="num"></label>
       <label class="usual"><span data-ul>${ul}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${us}" data-f="usual"></label></div>
-    <details class="inut"${S.inutOpen&&S.inutOpen[isNew?"new":it.id]?" open":""}><summary>${S.inutOpen&&S.inutOpen[isNew?"new":it.id]?"▾":"▸"} Nutrients <span data-nsum>${nutSum(it&&it.nut)}</span>${it&&it.lv!=null?`<span class="src">Livsmedelsverket</span>`:it&&it.off?`<span class="src">Open Food Facts</span>`:""}</summary>
-      <div class="nbasis">Grams<span data-nb>${nutPh(m)}</span>, from the label</div>
-      <div class="r3">${[["p","Protein"],["fib","Fibre"],["f","Fat"],["c","Carbs"]].map(([k,l])=>`<label><span>${l}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${it&&it.nut&&it.nut[k]!=null?it.nut[k]:""}" data-n="${k}" aria-label="${l} in grams"></label>`).join("")}</div>
-    </details></div>`}
+    <div class="inut2"><div class="nh"><span>Nutrients, g<span data-nb>${nutPh(m)}</span></span>${src}</div>
+      <div class="r3">${[["p","Protein"],["fib","Fibre"],["f","Fat"],["c","Carbs"]].map(([k,l])=>`<label><span>${l}</span><input type="number" class="num" inputmode="decimal" step="any" min="0" value="${it&&it.nut&&it.nut[k]!=null?it.nut[k]:""}" data-n="${k}" aria-label="${l} in grams"></label>`).join("")}</div></div>
+    ${isNew?`<div class="pfoot"><span class="hint">Grams from the label</span><span class="sp"></span><button class="ghost" data-icancel type="button">Cancel</button><button class="primary" data-iadd type="button">Add</button></div>`
+      :`<div class="pfoot"><button type="button" class="delb" data-idel>${ico("trash")}<span>Delete</span></button><span class="sp"></span><span class="hint">Changes save as you go</span></div>`}
+  </div>`}
 const nutSum=o=>hasNut(o)?(o.p!=null?`· <b>P ${fmtG(o.p)} g</b>`:"· filled"):"· empty";
-function renderItems(){
-  $("iedit").innerHTML=S.items.map(it=>itemCard(it,false)).join("")+`<div class="nomatch" id="inone" hidden></div><div class="psug isug" id="isug" hidden></div>`+itemCard(null,true)+
-    `<div style="font-size:12px;color:var(--muted)">Changes save when you leave a field. For per 100 g and per dl items, type the number from the label (per dl uses the label's per 100 ml). Switching how an item is counted only affects what you log from now on.</div>
-    <div style="font-size:12px;color:var(--muted)">Food data marked Livsmedelsverket comes from Livsmedelsverket's food database (Livsmedelsdatabasen), CC BY 4.0. Products marked Open Food Facts come from Open Food Facts (openfoodfacts.org), ODbL.</div>`;
+const itemLetter=it=>{const c=String(it.name||"").trim().charAt(0).toLocaleUpperCase("sv");return /\d/.test(c)?"#":c||"#"};
+function itemRowHtml(it){const w=it.mode==="g"||it.mode==="dl",o=it.nut||{};
+  const basis=w?`${n(Number(it.per100)||0)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal each`;
+  const nut=hasNut(o)?[o.p!=null?`P ${fmtG(o.p)} g`:"",o.fib!=null?`fibre ${fmtG(o.fib)} g`:""].filter(Boolean).join(" · ")||"Fat and carbs only":"";
+  const src=it.lv!=null?`<span class="srct" title="Livsmedelsverket">LV</span>`:it.off?`<span class="srct" title="Open Food Facts">OFF</span>`:"";
+  return `<button type="button" class="erow" data-iopen="${esc(it.id)}" aria-expanded="false">${tile("item","sm")}<span class="et"><b>${esc(it.name)}</b><span class="em">${basis}</span>${nut?`<span class="en">${nut}</span>`:`<span class="en none">No nutrients</span>`}</span>${src}${ico("right","chev")}</button>`}
+function renderItems(){if(S.openIid&&!S.items.some(i=>i.id===S.openIid))S.openIid=null;
+  let h="",last=null;
+  for(const it of S.items){const L=itemLetter(it);if(L!==last){h+=`<div class="elet" data-let>${esc(L)}</div>`;last=L}h+=it.id===S.openIid?itemCard(it,false):itemRowHtml(it)}
+  const nw=$("newitem"),keep=nw&&!nw.hidden?nw:null;
+  $("iedit").innerHTML=`<div class="psug isug" id="isug" hidden></div><div class="nomatch" id="inone" hidden></div><div data-newslot></div>`+h+
+    `<div style="font-size:12px;color:var(--muted)">For per 100 g and per dl items, type the number from the label (per dl uses the label's per 100 ml). Switching how an item is counted only affects what you log from now on.</div>
+    <div style="font-size:12px;color:var(--muted)">Food data marked Livsmedelsverket (LV) comes from Livsmedelsverket's food database (Livsmedelsdatabasen), CC BY 4.0. Products marked Open Food Facts (OFF) come from Open Food Facts (openfoodfacts.org), ODbL.</div>`;
+  // A new item being filled in stays as it is across redraws
+  const slot=$("iedit").querySelector("[data-newslot]");if(keep)slot.replaceWith(keep);else slot.outerHTML=itemCard(null,true);
   filterItems();
 }
-// Search in Edit regular items: hides non-matching cards (the new-item card always stays). With no match, the typed text pre-fills the new item's name.
+function refreshItemRows(){const box=$("iedit"),rows=[...box.querySelectorAll(".erow[data-iopen]")],ids=rows.map(r=>r.dataset.iopen).concat(S.openIid?[S.openIid]:[]);
+  if(ids.length!==S.items.length||S.items.some(i=>!ids.includes(i.id))){renderItems();return}
+  rows.forEach(r=>{const it=S.items.find(x=>x.id===r.dataset.iopen);if(!it)return;const w=document.createElement("div");w.innerHTML=itemRowHtml(it);const nr=w.firstElementChild;nr.hidden=r.hidden;if(nr.outerHTML!==r.outerHTML)r.replaceWith(nr)})}
+function openItem(id){S.openIid=id;renderItems();const el=id&&$("iedit").querySelector(`.ic[data-iid="${id}"]`);if(el){const r=el.getBoundingClientRect();if(r.top<8||r.top>innerHeight*0.6)window.scrollTo({top:scrollY+r.top-12})}}
+// Search in Edit regular items: hides non-matching rows and empty letters. With no match, the typed text pre-fills a new item.
 function filterItems(){
-  const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0;
-  $("iedit").querySelectorAll(".ic[data-iid]").forEach(c=>{const it=S.items.find(i=>i.id===c.dataset.iid);const ok=!toks.length||hit(c.querySelector('[data-f="name"]').value,toks)||(!!it&&itemHit(it,toks));c.hidden=!ok;if(ok)shown++});
-  const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”. Add it below.`}
+  const q=S.iq.trim(),toks=sfold(q).split(" ").filter(Boolean);let shown=0,let_=null,inLet=0;
+  const endLet=()=>{if(let_)let_.hidden=!inLet};
+  $("iedit").querySelectorAll("[data-let],.erow[data-iopen],.ic[data-iid]").forEach(c=>{
+    if(c.matches("[data-let]")){endLet();let_=c;inLet=0;return}
+    const iid=c.dataset.iopen||c.dataset.iid,it=S.items.find(i=>i.id===iid);
+    const ok=!toks.length||(!!it&&itemHit(it,toks))||(c.dataset.iid&&hit(c.querySelector('[data-f="name"]').value,toks));c.hidden=!ok;if(ok){shown++;inLet++}});
+  endLet();
+  const none=$("inone");if(none){const show=toks.length>0&&shown===0;none.hidden=!show;if(show)none.textContent=`No regular item matches “${q}”.`}
+  const nw=$("newitem");if(nw)nw.hidden=!(S.inew||(toks.length>0&&shown===0));
   const ib=$("isug");if(ib){const h=extSugHtml(q,S.iext||"",S.imore||0);ib.innerHTML=h;ib.hidden=!h;if(!S.foods&&sfold(q).replace(/ /g,"").length>=3)loadFoods().then(f=>{if(f&&S.iq.trim()===q)filterItems()})}
   const nn=$("newitem")&&$("newitem").querySelector('[data-f="name"]');
   if(nn&&S.iAuto!==false){const want=toks.length&&shown===0?q:"";if(nn.value===(S.iAutoVal||"")||nn.value==="")nn.value=want;S.iAutoVal=want}
@@ -1153,14 +1315,10 @@ $("itemadd").addEventListener("click",()=>{const ids=Object.keys(S.pick).filter(
 $("iedit").addEventListener("change",e=>{const c=e.target.closest(".ic");if(!c)return;
   if(e.target.matches('[data-f="mode"]')){const was=c.dataset.mode,m=e.target.value,inp=c.querySelector('[data-f="num"]');
     if((was==="piece")!==(m==="piece")){inp.value="";c.querySelectorAll("[data-n]").forEach(i=>i.value="")}syncItemCard(c);if(inp.value==="")inp.focus()}
-  if(e.target.matches("[data-n]")){const s=c.querySelector("[data-nsum]"),o={};c.querySelectorAll("[data-n]").forEach(i=>{if(i.value!=="")o[i.dataset.n]=Number(i.value)});if(s)s.innerHTML=nutSum(o)}
   if(!c.dataset.iid)return;const doc=readItemCard(c);if(!doc)return;const old=S.items.find(i=>i.id===c.dataset.iid);
   // A database link stays while the item has nutrients; fields the card doesn't show (like a skipped match) are kept.
   if(old){if(hasNut(doc.nut)){if(old.lv!=null)doc.lv=old.lv;else if(old.off)doc.off=old.off}for(const k in old)if(!["id","name","mode","per100","usual","kcal","nut","lv","off"].includes(k))doc[k]=old[k]}
   S.itemsQuiet=true;write(()=>S.db.doc("items/"+c.dataset.iid).set(doc),"Saved")});
-S.inutOpen={};
-$("iedit").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.inut"))return;const c=d.closest(".ic");const k=c&&(c.dataset.iid||"new");if(k){if(d.open)S.inutOpen[k]=1;else delete S.inutOpen[k]}
-  const sm=d.querySelector("summary");if(sm&&sm.firstChild)sm.firstChild.textContent=d.open?"▾ Nutrients ":"▸ Nutrients "},true);
 $("isrch").addEventListener("input",e=>{S.iq=e.target.value;S.iAuto=true;S.iext="";S.imore=false;filterItems()});
 // Picking a database food fills the new-item card in Edit (shaded where the values came from the database)
 function fillNewItem(f,src){const c=$("newitem");if(!c)return;const off=src==="off",m=f.mode||"g";
@@ -1168,7 +1326,7 @@ function fillNewItem(f,src){const c=$("newitem");if(!c)return;const off=src==="o
   const num=c.querySelector('[data-f="num"]');num.value=f.kcal;num.classList.add("pre");c.querySelector('[data-f="usual"]').value="";
   c.querySelectorAll("[data-n]").forEach(i=>{const v=f[i.dataset.n];i.value=v==null?"":v;i.classList.toggle("pre",v!=null)});
   delete c.dataset.lv;delete c.dataset.off;if(off)c.dataset.off=f.code;else c.dataset.lv=f.id;
-  const d=c.querySelector("details.inut");if(d)d.open=true;const sm=c.querySelector("[data-nsum]");if(sm){const o={};NK.forEach(k=>{if(f[k]!=null)o[k]=f[k]});sm.innerHTML=nutSum(o)}
+  S.inew=true;c.hidden=false;
   S.iAuto=false;const ib=$("isug");if(ib){ib.hidden=true;ib.innerHTML=""}
   c.scrollIntoView({block:"center"});c.querySelector('[data-f="usual"]').focus()}
 $("iedit").addEventListener("click",e=>{
@@ -1181,7 +1339,7 @@ $("iedit").addEventListener("input",e=>{if(e.target.classList&&e.target.classLis
 $("iedit").addEventListener("input",e=>{if(e.target.closest("#newitem")&&e.target.matches('[data-f="name"]'))S.iAuto=e.target.value===(S.iAutoVal||"")});
 // ---- Nutrients from food databases (Edit). matches.json holds suggested matches by item id (lv = Livsmedelsverket id, off = barcode).
 // Use fills the item's empty nutrient fields from the matched food, scaled by the item's kcal over the food's kcal, and links the item to it.
-S.mtab="review";S.mPick={};S.mOpen=null;S.mq="";S.mext="";S.mmore=false;
+S.mtab="review";S.mPick={};S.mOpen=null;S.mmq="";S.mext="";S.mmore=false;
 function loadMatches(){if(S.msug)return Promise.resolve(S.msug);if(S.msugP)return S.msugP;
   S.msugP=fetch("matches.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{S.msug=(d&&d.m)||{};return S.msug}).catch(()=>{S.msugP=null;return null});return S.msugP}
 const mFood=m=>!m?null:m.off?offByCode(m.off):m.lv!=null?dbFood(m.lv):null;
@@ -1225,8 +1383,8 @@ function mMealFills(){const by=new Map();S.items.forEach(it=>{if(hasNut(it.nut))
     if(cnt)out.push({p,items,cnt})}return out}
 function renderMatchCount(){const el=$("mcount");if(!el)return;if(!S.msug){el.textContent="";return}
   const k=S.items.filter(it=>!mDone(it)&&!it.mskip&&S.msug[it.id]).length;el.textContent=k?`· ${k} to review`:""}
-function mSugBox(){const q=S.mq.trim();if(sfold(q).replace(/ /g,"").length<3)return "";return extSugHtml(q,S.mext,S.mmore,true)||`<div class="nomatch">No food matches “${esc(q)}”.</div>`}
-const mSearch=()=>`<div class="msrch"><input type="search" data-msrch value="${esc(S.mq)}" placeholder="Search Livsmedelsverket and Open Food Facts" aria-label="Search the food databases" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><div class="psug" data-msug${mSugBox()?"":" hidden"}>${mSugBox()}</div></div>`;
+function mSugBox(){const q=S.mmq.trim();if(sfold(q).replace(/ /g,"").length<3)return "";return extSugHtml(q,S.mext,S.mmore,true)||`<div class="nomatch">No food matches “${esc(q)}”.</div>`}
+const mSearch=()=>`<div class="msrch"><input type="search" data-msrch value="${esc(S.mmq)}" placeholder="Search Livsmedelsverket and Open Food Facts" aria-label="Search the food databases" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><div class="psug" data-msug${mSugBox()?"":" hidden"}>${mSugBox()}</div></div>`;
 // One card. With a match to show: what Use fills. Otherwise the item's state and Find match.
 function mCard(it,tab){const id=esc(it.id),open=S.mOpen===it.id,picked=!!S.mPick[it.id],done=tab==="done";
   const head=`<div class="m1"><b>${esc(it.name)}</b><span class="num">${mBasis(it)}</span></div>`;
@@ -1262,7 +1420,7 @@ function mUse(id){const it=S.items.find(i=>i.id===id),s=it&&mSug(it);if(!s)retur
   delete S.mPick[id];S.mOpen=null;write(()=>S.db.doc("items/"+id).set(doc),`${done?"Replaced":"Filled"} nutrients for ${it.name}`)}
 $("matchbox").addEventListener("toggle",()=>{if(!$("matchbox").open)return;renderMatch();if(S.foods&&S.offFoods&&S.msug)return;S.mload="";
   Promise.all([loadFoods(),loadOff(),loadMatches()]).then(r=>{S.mload=r.every(Boolean)?"ok":"error";renderMatch()})});
-$("mlist").addEventListener("input",e=>{const i=e.target.closest("[data-msrch]");if(!i)return;S.mq=i.value;S.mext="";S.mmore=false;const b=i.parentElement.querySelector("[data-msug]");const h=mSugBox();b.innerHTML=h;b.hidden=!h});
+$("mlist").addEventListener("input",e=>{const i=e.target.closest("[data-msrch]");if(!i)return;S.mmq=i.value;S.mext="";S.mmore=false;const b=i.parentElement.querySelector("[data-msug]");const h=mSugBox();b.innerHTML=h;b.hidden=!h});
 $("mlist").addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;const card=t.closest("[data-mid]"),id=card&&card.dataset.mid;
   if(t.matches("[data-mt]")){S.mtab=t.dataset.mt;S.mOpen=null;renderMatch();return}
   if(t.matches("[data-mmeals]")){const fills=mMealFills(),k=fills.reduce((a,x)=>a+x.cnt,0);if(!k)return;S.forcePresets=true;
@@ -1274,20 +1432,26 @@ $("mlist").addEventListener("click",e=>{const t=e.target.closest("button");if(!t
     if(t.matches("[data-sugmore]")){const top=box.scrollTop;S.mmore=(S.mmore||0)+1;box.innerHTML=mSugBox();box.scrollTop=top;return}
     if(t.matches("[data-sugoffload]")){t.disabled=true;loadOff().then(r=>{if(!r){t.disabled=false;return}S.mext="off";box.innerHTML=mSugBox()});return}
     if(t.matches("[data-sugdb],[data-sugoff]")&&id){S.mPick[id]=t.matches("[data-sugoff]")?{off:t.dataset.sugoff}:{lv:isNaN(Number(t.dataset.sugdb))?t.dataset.sugdb:Number(t.dataset.sugdb)};
-      S.mOpen=null;S.mq="";renderMatch();return}
+      S.mOpen=null;S.mmq="";renderMatch();return}
     return}
   if(!id)return;const it=S.items.find(i=>i.id===id);if(!it)return;
   if(t.matches("[data-muse]")){mUse(id);return}
   if(t.matches("[data-mcancel]")){delete S.mPick[id];S.mOpen=null;renderMatch();return}
   if(t.matches("[data-mfind]")){if(S.mOpen===id){S.mOpen=null;renderMatch();return}
-    const s=mSug(it),f=s&&s.f;S.mOpen=id;S.mq=f?String(f.name).split(/[ ,]/)[0]:it.name;S.mext=s&&s.src==="off"?"off":"";S.mmore=false;S.mFocus=true;renderMatch();return}
+    const s=mSug(it),f=s&&s.f;S.mOpen=id;S.mmq=f?String(f.name).split(/[ ,]/)[0]:it.name;S.mext=s&&s.src==="off"?"off":"";S.mmore=false;S.mFocus=true;renderMatch();return}
   if(t.matches("[data-mskip]")){const {id:_,...rest}=it;write(()=>S.db.doc("items/"+id).set({...rest,mskip:true}),`Skipped ${it.name}`);return}
   if(t.matches("[data-munskip]")){const {id:_,mskip,...rest}=it;write(()=>S.db.doc("items/"+id).set(rest),`${it.name} is back in To review`)}});
 $("psrch2").addEventListener("input",e=>{S.pq=e.target.value;filterPresets()});
+$("newitembtn").addEventListener("click",()=>{S.inew=true;const nw=$("newitem");if(!nw)return;nw.hidden=false;nw.scrollIntoView({block:"center"});nw.querySelector('[data-f="name"]').focus()});
 $("iedit").addEventListener("click",e=>{
-  if(e.target.matches("[data-iadd]")){const doc=readItemCard($("newitem"));
-    if(!doc){toast("Add a name and a kcal number");return}S.forceItems=true;S.iq="";$("isrch").value="";S.iAuto=true;S.iAutoVal="";write(()=>S.db.collection("items").add(doc),"Item saved");return}
-  if(e.target.matches("[data-idel]")){const b=e.target,r=b.closest("[data-iid]");if(b.dataset.sure){S.forceItems=true;write(()=>S.db.doc("items/"+r.dataset.iid).delete(),"Deleted")}else{b.dataset.sure="1";b.textContent="Delete";b.style.color="var(--over)"}}
+  const ob=e.target.closest("[data-iopen]");if(ob){openItem(ob.dataset.iopen);return}
+  const t=e.target.closest("button");if(!t)return;
+  if(t.matches("[data-iclose]")){openItem(null);return}
+  if(t.matches("[data-icancel]")){S.inew=false;const nw=$("newitem");if(nw)nw.outerHTML=itemCard(null,true);filterItems();return}
+  if(t.matches("[data-iadd]")){const doc=readItemCard($("newitem"));
+    if(!doc){toast("Add a name and a kcal number");return}S.forceItems=true;S.inew=false;S.iq="";$("isrch").value="";S.iAuto=true;S.iAutoVal="";
+    const nw=$("newitem");if(nw)nw.remove();write(()=>S.db.collection("items").add(doc),"Item saved");return}
+  if(t.matches("[data-idel]")){const r=t.closest("[data-iid]");if(t.dataset.sure){S.forceItems=true;S.openIid=null;write(()=>S.db.doc("items/"+r.dataset.iid).delete(),"Deleted")}else{t.dataset.sure="1";t.querySelector("span").textContent="Tap again to delete"}}
 });
 $("entries").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.meal"))return;if(d.open)delete S.mealClosed[d.dataset.meal];else S.mealClosed[d.dataset.meal]=1;try{localStorage.setItem("kd-mealclosed",JSON.stringify(S.mealClosed))}catch(_){}},true);
 $("entries").addEventListener("keydown",e=>{if(e.target.matches(".kin")&&e.key==="Enter"){e.preventDefault();e.target.blur();S.editId=null;render()}});
@@ -1387,10 +1551,10 @@ document.addEventListener("click",e=>{if(!S.openMenu)return;if(e.target.closest(
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(S.openMenu||S.editId)){S.openMenu=null;S.editId=null;S.confirmDel=null;render()}});
 function presetRow(food,kcal,nut){const w=document.createElement("div");
   if(food&&hasAmt(food)){w.innerHTML=piHtml(food,kcal,nut);return w.firstElementChild}
-  const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal" min="0" step="1" inputmode="numeric"><button class="ghost" data-rm type="button">✕</button>`;
+  const row=document.createElement("div");row.className="pi";row.innerHTML=`<input data-f="food" aria-label="Item" placeholder="Item"><span class="pk"><input type="number" class="num" data-f="kcal" aria-label="kcal" placeholder="kcal" min="0" step="1" inputmode="numeric"> kcal</span><button class="iconb" data-rm type="button" aria-label="Remove">${ico("x")}</button>`;
   row.querySelector('[data-f="food"]').value=food||"";row.querySelector('[data-f="kcal"]').value=kcal==null?"":kcal;return row}
 $("pedit").addEventListener("input",e=>{const inp=e.target.closest("[data-psrch]");if(!inp)return;
-  const box=inp.parentElement.querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
+  const box=inp.closest(".padd").querySelector("[data-psug]"),q=inp.value.trim(),toks=sfold(q).split(" ").filter(Boolean);
   if(!toks.length){box.hidden=true;box.innerHTML="";return}
   const m=S.items.filter(it=>itemHit(it,toks)).slice(0,8),exact=S.items.some(i=>sfold(i.name)===sfold(q));
   box.innerHTML=m.map(it=>`<button type="button" data-sugi="${esc(it.id)}"><span>${esc(it.name)}</span><small class="num">${isW(it)?`${n(it.per100)} kcal / ${it.mode==="g"?"100 g":"dl"}`:`${n(it.kcal)} kcal`}${pLab(it.nut)}</small></button>`).join("")+extSugHtml(q,e.isTrusted?(inp.dataset.ext=inp.dataset.more=""):inp.dataset.ext,Number(inp.dataset.more)||0)+(exact?"":`<button type="button" class="mk" data-sugnew><span>Add “${esc(q)}” as a new item</span></button>`);
@@ -1405,8 +1569,8 @@ $("pedit").addEventListener("click",e=>{if(sugExtClick(e))return;const b=e.targe
     pad.insertAdjacentHTML("beforeend",pNewHtml(name));const nn=pad.querySelector('[data-pn="num"]');nn.focus();return}
   const it=S.items.find(i=>i.id===b.dataset.sugi);if(!it)return;
   const row=isW(it)?presetRow(fmtFood(usualOf(it),it.mode,it.name),Math.round(usualOf(it)*perUnit(it)),nutMul(nutPU(it),usualOf(it))):presetRow(presetFood(1,"",it.name),Number(it.kcal)||0,nutPU(it));
-  pad.before(row);updatePTot(pad.closest(".pblock"));inp.value="";box.hidden=true;box.innerHTML="";
-  toast("Added to the meal. Tap Save to keep it")});
+  pad.before(row);const blk=pad.closest(".pblock");updatePTot(blk);inp.value="";box.hidden=true;box.innerHTML="";
+  savePreset(blk,`Added ${it.name}`)});
 // New ingredient card inside a meal (same fields as Find & add). Per 100 g / per dl ingredients are also saved as regular items.
 function pNewHtml(name,inLog,db){const m=db?(db.mode||"g"):"piece",v=x=>x==null?"":x,pre=db?" pre":"",off=db&&db.src==="off";
   return `<div class="newrow pnew" data-pnew data-mode="${m}"${db?`${off?` data-off="${esc(db.code)}"`:` data-lv="${esc(db.id)}"`} data-df="${v(db.f)}" data-dc="${v(db.c)}"`:""}>
@@ -1441,10 +1605,9 @@ $("pedit").addEventListener("click",e=>{
   if(e.target.closest("[data-pcancel]")){c.remove();return}
   if(!e.target.closest("[data-padd]"))return;
   const v=readPNew(c);if(!v)return;
-  const block=c.closest(".pblock"),row=presetRow(v.food,v.kcal,v.nut),saved=!!v.item;
-  if(v.item)write(()=>S.db.collection("items").add(v.item));
+  const block=c.closest(".pblock"),row=presetRow(v.food,v.kcal,v.nut),item=v.item;
   c.closest(".padd").before(row);c.remove();updatePTot(block);
-  toast(saved?"Added to the meal and saved as a regular item. Tap Save to keep the meal":"Added to the meal. Tap Save to keep it")});
+  savePreset(block,item?"Added to the meal and saved as a regular item":"Added to the meal",item?()=>S.db.collection("items").add(item):null)});
 $("pedit").addEventListener("input",e=>{
   const c=e.target.closest("[data-pnew]");if(c){e.target.classList.remove("pre");syncPNew(c);return}
   const block=e.target.closest(".pblock");if(!block)return;
@@ -1457,16 +1620,21 @@ $("pedit").addEventListener("input",e=>{
 $("pedit").addEventListener("change",e=>{if(e.target.matches("[data-pot]")){const b=e.target.closest(".pblock");const sc=b.querySelector("[data-scale]");if(sc.value)e.target.dispatchEvent(new Event("input",{bubbles:true}))}});
 $("pedit").addEventListener("click",e=>{const b=e.target.closest("[data-rpm],[data-rpp]");if(!b)return;
   const row=b.closest(".pi.amt"),inp=row.querySelector('[data-f="amt"]'),u=row.dataset.unit,q0=Number(inp.value)||0,q=Math.max(0,roundAmt(q0+(b.matches("[data-rpm]")?-1:1)*stepOf(u),u));
-  inp.value=q;row.querySelector('[data-f="kcal"]').value=Math.round((Number(row.dataset.pu)||0)*q);updatePTot(row.closest(".pblock"))});
+  inp.value=q;row.querySelector('[data-f="kcal"]').value=Math.round((Number(row.dataset.pu)||0)*q);const blk=row.closest(".pblock");updatePTot(blk);schedSave(blk)});
+// Typed changes save when a field is left (not the add-ingredient search or a new-ingredient card)
+$("pedit").addEventListener("change",e=>{const blk=e.target.closest(".pblock");if(!blk||e.target.closest(".padd"))return;
+  if(e.target.matches("[data-pot]")&&!blk.querySelector("[data-scale]").value)return;savePreset(blk)});
+$("pedit").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.pdd"))return;const id=d.closest(".pblock").dataset.pid;if(d.open)S.pddOpen[id]=1;else delete S.pddOpen[id]},true);
+$("newpreset").addEventListener("click",e=>{if(S.creating||!S.canWrite)return;S.creating=true;const id="p"+Date.now().toString(36);flushPresets();S.forcePresets=true;
+  S.pq="";$("psrch2").value="";S.focusPid=id;S.openPid=id;
+  write(()=>S.db.doc("presets/"+id).set({name:"New meal",items:[],order:S.presets.length+1}),"New meal added").finally(()=>{S.creating=false})});
 $("pedit").addEventListener("click",e=>{
-  if(e.target.id==="newpreset"){if(S.creating)return;S.creating=true;e.target.disabled=true;const id="p"+Date.now().toString(36);S.forcePresets=true;
-    S.pq="";$("psrch2").value="";S.focusPid=id;
-    write(()=>S.db.doc("presets/"+id).set({name:"New meal",items:[{food:"",kcal:0}],order:S.presets.length+1}),"New meal added. Name it, fill it in and tap Save").finally(()=>{S.creating=false});return}
-  const block=e.target.closest(".pblock");if(!block)return;const id=block.dataset.pid;
-  if(e.target.matches("[data-save]")){const p=readPreset(block);S.forcePresets=true;write(()=>S.db.doc("presets/"+id).set({name:p.name,...(p.meal?{meal:p.meal}:{}),items:p.items,order:p.order||0,...(p.portions>0?{portions:p.portions}:{}),...(p.cookedG>0?{cookedG:p.cookedG}:{})}),"Saved")}
-  else if(e.target.matches("[data-additem]")){block.querySelector(".padd").before(presetRow("",null))}
-  else if(e.target.matches("[data-rm]")){e.target.closest(".pi").remove();updatePTot(block)}
-  else if(e.target.matches("[data-delp]")){if(e.target.dataset.sure){S.forcePresets=true;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{e.target.dataset.sure="1";e.target.textContent="Confirm delete"}}
+  const ob=e.target.closest("[data-popen]");if(ob){openPreset(ob.dataset.popen);return}
+  const t=e.target.closest("button");const block=t&&t.closest(".pblock");if(!block)return;const id=block.dataset.pid;
+  if(t.matches("[data-pclose]"))openPreset(null);
+  else if(t.matches("[data-additem]")){const r=presetRow("",null);block.querySelector(".padd").before(r);updatePTot(block);r.querySelector('[data-f="food"]').focus()}
+  else if(t.matches("[data-rm]")){const r=t.closest(".pi"),nm=r.querySelector('[data-f="food"]').value.trim();r.remove();updatePTot(block);savePreset(block,nm?`Removed ${nm}`:"Removed")}
+  else if(t.matches("[data-delp]")){if(t.dataset.sure){S.forcePresets=true;S.openPid=null;write(()=>S.db.doc("presets/"+id).delete(),"Deleted")}else{t.dataset.sure="1";t.querySelector("span").textContent="Tap again to delete"}}
 });
 ["s-burn","s-low","s-high","s-goal","s-prot","s-fib"].forEach(id=>$(id).addEventListener("change",()=>{const v={...S.settings,burn:Number($("s-burn").value)||2700,targetLow:Number($("s-low").value)||2100,targetHigh:Number($("s-high").value)||2300,goalKg:Number($("s-goal").value)||79,pTarget:Number($("s-prot").value)||120,fibTarget:Number($("s-fib").value)||35};write(()=>S.db.doc("settings/main").set(v),"Saved")}));
 function fillSettings(){$("s-burn").value=S.settings.burn;$("s-low").value=S.settings.targetLow;$("s-high").value=S.settings.targetHigh;$("s-goal").value=S.settings.goalKg;$("s-prot").value=S.settings.pTarget??120;$("s-fib").value=S.settings.fibTarget??35}
@@ -1542,7 +1710,9 @@ function startLog(db){
     const a=document.activeElement;const typing=a&&$("pedit").contains(a)&&(a.tagName==="INPUT"||a.tagName==="SELECT");
     // Re-draw the editor only when the saved meals changed, so unsaved edits survive unrelated writes.
     const sig=JSON.stringify(S.presets);
-    if(S.forcePresets||(sig!==S.presetSig&&!typing)){S.forcePresets=false;S.presetSig=sig;renderPresets()}mRedraw();render()},onErr);
+    // After a save from the open meal only the closed rows are redrawn, so its fields (and any blank row) stay as they are.
+    if(S.presetsQuiet&&!S.forcePresets){S.presetsQuiet=false;S.presetSig=sig;refreshPresetRows()}
+    else if(S.forcePresets||(sig!==S.presetSig&&!typing)){S.forcePresets=false;S.presetSig=sig;renderPresets()}mRedraw();render()},onErr);
   db.collection("pots").onSnapshot(s=>{S.pots=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sfold(a.name).localeCompare(sfold(b.name),"sv"));
     const a=document.activeElement;const typing=a&&$("potedit").contains(a)&&a.tagName==="INPUT";
     const sig=JSON.stringify(S.pots),changed=sig!==S.potSig;
@@ -1552,7 +1722,7 @@ function startLog(db){
     const a=document.activeElement;const typing=a&&$("iedit").contains(a)&&a.tagName==="INPUT";
     const sig=JSON.stringify(S.items);
     // A save from an item card leaves the cards as they are: they already show what was saved, and redrawing would drop focus.
-    if(S.itemsQuiet&&!S.forceItems){S.itemsQuiet=false;S.itemSig=sig}
+    if(S.itemsQuiet&&!S.forceItems){S.itemsQuiet=false;S.itemSig=sig;refreshItemRows()}
     else if(S.forceItems||(sig!==S.itemSig&&!typing)){S.forceItems=false;S.itemSig=sig;renderItems()}mRedraw();render()},onErr);
   db.doc("settings/main").onSnapshot(d=>{if(d.exists){S.settings={...S.settings,...d.data()};fillSettings()}render();renderWeight()},onErr);
 }
